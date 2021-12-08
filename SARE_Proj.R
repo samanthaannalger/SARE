@@ -4,7 +4,7 @@
 
 
 # set directory:
-setwd("~/Desktop/SARE_Proj")
+setwd("~/Documents/GitHub/SARE")
 
 # install libraries
 library(dplyr)
