@@ -225,8 +225,8 @@ imputedDF$Fitness <- range01(Fitness)
 imputedDF[order(imputedDF$Fitness, decreasing = TRUE),]
 
 
-
-
+# explicit print command:
+print(imputedDF)
 
 
 
