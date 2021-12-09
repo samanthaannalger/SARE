@@ -6,6 +6,7 @@
 # set directory:
 setwd("~/Documents/GitHub/SARE")
 
+
 # install libraries
 library(dplyr)
 library(ggplot2)
@@ -14,8 +15,6 @@ library(tidyr)
 library(viridis)
 library(car)
 library(imputeTS)
-
-
 
 
 # load in data
@@ -33,8 +32,9 @@ unique_to_remove <- unique(d$lab_ID)
 ds = filter(ds, !(lab_ID %in% unique_to_remove))
 
 
+#### VARROA ANALYSIS
 # aggregate mite load by sampling event and yard
-pltDF <- ds %>% # operate on the dataframe (ds) and assign to new object (pltDF)
+pltV <- ds %>% # operate on the dataframe (ds) and assign to new object (V)
   group_by(sampling_event, yard) %>% # pick variables to group by
   summarise(
     
@@ -46,11 +46,9 @@ pltDF <- ds %>% # operate on the dataframe (ds) and assign to new object (pltDF)
             
             ) 
 
-
-
 # Plot the time series data by group (yard in this case)
 # the fist line of code calls in the data set and sets the variables
-ggplot(data=pltDF, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
+ggplot(data=pltV, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
   ylab("Varroa Load (mites/100 bees)") + # y axis label
   xlab("Sampling Event") + # x axis label
   theme_minimal(base_size = 17) + # size of the text and label ticks
@@ -71,7 +69,48 @@ Anova(mod1) # check significance
 
 
 
-#### here we are adding hygienic behavior to every instnace of each I
+
+
+#### NOSEMA ANALYSIS
+# aggregate nosema load by sampling event and yard
+pltN <- ds %>% # operate on the dataframe (ds) and assign to new object (pltN)
+  group_by(sampling_event, yard) %>% # pick variables to group by
+  summarise(
+    
+    mean = mean(nosema_load_spores.bee, na.rm=T), # mean
+    SD = sd(nosema_load_spores.bee, na.rm=T), # standard dev.
+    N = length(nosema_load_spores.bee), # sample size
+    SE = SD/sqrt(N),                   # standard error
+    MAX = max(nosema_load_spores.bee, na.rm=T)
+    
+  ) 
+
+# Plot the time series data by group (yard in this case)
+# the fist line of code calls in the data set and sets the variables
+ggplot(data=pltN, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
+  ylab("Nosema Load (spores/bee)") + # y axis label
+  xlab("Sampling Event") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  geom_line(size=1.5) + # create lines and set thickness 
+  geom_point(size=4, shape=18) + # create points and set size and shape
+  geom_errorbar(aes(ymin=mean-SE, ymax=mean+SE), width=.2) + # add standard errors
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H", name="Yard:") # color pallets option = A-H
+
+# statistical analysis 
+# create the model
+mod1 <- lmer(data=ds, nosema_load_spores.bee ~ yard * sampling_event + (1|lab_ID))
+
+summary(mod1) # look at the summary of the model
+
+Anova(mod1) # check significance 
+
+
+
+
+
+#### HYGIENIC BEHAVIOR ANALYSIS
+## here we are adding hygienic behavior to every instnace of each I
 
 # subset of dataset with rows that have a LN2 test
 testedDS <- ds[!is.na(ds$HB_percentile),]
@@ -85,8 +124,7 @@ colnames(testedDS) <- c("lab_ID", "percent_hygienic")
 ds=merge(x=ds, y=testedDS, all.x = TRUE)
 
 
-
-##### Plot HB by varroa load
+## Plot HB by varroa load
 
 # Add regression lines
 ggplot(ds, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
@@ -103,7 +141,6 @@ ggplot(ds, aes(x=percent_hygienic, y=varroa_load_mites.100.bees,
   guides(color = guide_legend(override.aes = list(label = '')))
 
 
-
 # new plot that removes time points as a factor
 ggplot(ds, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
   #geom_point(size=0) + 
@@ -114,25 +151,18 @@ ggplot(ds, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
   theme_minimal(base_size = 17) # size of the text and label ticks
 
 
-
-
 # HB by varroa load model
 mod2 <- lm(data=ds, varroa_load_mites.100.bees~percent_hygienic  sampling_event )
 
 summary(mod2)
 
-
 Anova(mod2)
-
 
 
 # plot Hygienic behavior by yard
 
 # take only sampling event 2
 dst2 <- ds[ds$sampling_event==2,]
-
-
-
 
 # Hygienic behavior by hive/yard, points number of hives, threshold dotted bar
 ggplot(dst2, aes(x=yard, y=percent_hygienic, color=yard)) + 
@@ -147,6 +177,7 @@ ggplot(dst2, aes(x=yard, y=percent_hygienic, color=yard)) +
   geom_hline(yintercept=.8, linetype="dashed",
              color = "red", size=1)
 
+
 # set up the model
 mod3 <- aov(data = dst2, percent_hygienic ~ yard)
 summary(mod3)
@@ -155,6 +186,42 @@ summary(mod3)
 # print table in increasing order based on some variable
 dst2[order(dst2$percent_hygienic, decreasing = TRUE),]
 
+
+
+
+
+##### HONEY YIELD ANALYSIS
+# take only sampling event 4
+dst4 <- ds[ds$sampling_event==4,]
+
+# plot Honey yield by hive/yard
+ggplot(dst4, aes(x=yard, y=honey_removed, color=yard)) + 
+  geom_boxplot(size=1) +
+  geom_text(aes(label=lab_ID), size=5) +
+  guides(color = guide_legend(override.aes = list(label = ''))) +
+  ylab("Honey Yield (lbs.)") + # y axis label
+  xlab("Bee Yard") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "none") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H") # color pallets option = A-H
+
+
+
+
+#### FRAMES OF BEES ANALYSIS
+# take only sampling event 1
+dst1 <- ds[ds$sampling_event==1,]
+
+# plot Honey yield by hive/yard
+ggplot(dst1, aes(x=yard, y=frame_of_bees, color=yard)) + 
+  geom_boxplot(size=1) +
+  geom_text(aes(label=lab_ID), size=5) +
+  guides(color = guide_legend(override.aes = list(label = ''))) +
+  ylab("Frames of Bees") + # y axis label
+  xlab("Bee Yard") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "none") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H") # color pallets option = A-H
 
 
 
