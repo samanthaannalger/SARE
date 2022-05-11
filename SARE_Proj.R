@@ -18,7 +18,9 @@ library(imputeTS)
 
 
 # load in data
-ds <- read.csv("SARE_Field_database.csv", header = TRUE, stringsAsFactors = FALSE)
+#ds <- read.csv("SARE_Field_database.csv", header = TRUE, stringsAsFactors = FALSE)
+ds <- read.csv("SARE_field_database2022.csv", header = TRUE, stringsAsFactors = FALSE)
+virus <- read.csv("DWV_SARE2021.csv", header = TRUE, stringsAsFactors = FALSE)
 
 
 # colonies that were removed
@@ -236,15 +238,17 @@ modelDF <- ds %>% # operate on the dataframe (ds) and assign to new object
   summarise(
             varroa = mean(varroa_load_mites.100.bees, na.rm=T),
             nosema = mean(nosema_load_spores.bee, na.rm=T),
-            hygienic = mean(HB_percentile, na.rm=T),
+            hygienic = mean(FKB_percentage, na.rm=T),
             honey = mean(honey_removed, na.rm=T),
             weight = mean(october_weight, na.rm=T)
     
             ) 
 
 
+modelDF <- merge(modelDF, virus, by = c("lab_ID"))
+
 # impute missing values:
-imputedDF <- na_mean(modelDF[,3:7])
+imputedDF <- na_mean(modelDF[,3:8])
 
 # merge ds back together with ID vars
 imputedDF <- cbind(imputedDF, modelDF[,1:2])
@@ -256,16 +260,28 @@ range01 <- function(x){
   (x-min(x))/(max(x)-min(x))
   }
 
+
+
 # call the function on each var
 varroaScaled <- range01(imputedDF$varroa)
 nosemaScaled <- range01(imputedDF$nosema)
 hygienicScaled <- range01(imputedDF$hygienic)
 honeyScaled <- range01(imputedDF$honey)
 weightScaled <- range01(imputedDF$weight)
+dwvScaled <- range01(imputedDF$NormGenomeCopy)
+
+mn <- mean(sum(nosemaScaled), sum(weightScaled), sum(varroaScaled), sum(honeyScaled), sum(hygienicScaled), sum(dwvScaled))
+
+varroaScaled <- (varroaScaled/sum(varroaScaled))*mn
+nosemaScaled <- (nosemaScaled/sum(nosemaScaled))*mn
+hygienicScaled <- (hygienicScaled/sum(hygienicScaled))*mn
+honeyScaled <- (honeyScaled/sum(honeyScaled))*mn
+weightScaled <- (weightScaled/sum(weightScaled))*mn
+dwvScaled <- (dwvScaled/sum(dwvScaled))*mn
 
 # create histogram data set of scaled vals
-histogram <- data.frame(varroaScaled, nosemaScaled, hygienicScaled, honeyScaled, weightScaled)
-histogramLong <- gather(histogram, condition, measurement, varroaScaled, nosemaScaled, hygienicScaled, honeyScaled, weightScaled)
+histogram <- data.frame(varroaScaled, nosemaScaled, hygienicScaled, honeyScaled, weightScaled, dwvScaled)
+histogramLong <- gather(histogram, condition, measurement, varroaScaled, nosemaScaled, hygienicScaled, honeyScaled, weightScaled, dwvScaled)
 
 
 # plot histogram of all scaled values
@@ -278,18 +294,86 @@ ggplot(histogramLong ,aes(x=measurement, fill=condition)) +
   scale_color_viridis(discrete = TRUE, option="H", name="Parameter") # color pallets option = A-H
 
 
+
+#Brood production= 3
+#Varroa load= 2
+#Nosema load= 1
+#Virus load= 1
+#Hygienic behavior= 5
+#Honey production= 4
+#October weight= 4
+# 48, 51, 44, 63, 61
+
+
+#c(varroa=12, nosema=5, hygienic=12, honey=10, weight=8, dwv=1)
 # create fitness function
-Fitness = (-1 * varroaScaled) + 
-  (-1 * nosemaScaled) + 
-  (1 * hygienicScaled) + 
-  (1 * honeyScaled) + 
-  (1 * weightScaled) 
+Fitness = (-3 * varroaScaled) +
+  (-3 * nosemaScaled) +
+  (3 * hygienicScaled) +
+  (-3 * dwvScaled) +
+  (3 * honeyScaled) +
+  (3 * weightScaled)
+
+
+
+# Fitness = (-16.8 * varroaScaled) + 
+#   (18.92 * nosemaScaled) + 
+#   (0.424 * hygienicScaled) + 
+#   (-8.432 * dwvScaled) +
+#   (-43.82 * honeyScaled) + 
+#   (0.55 * weightScaled) 
 
 # rescale 0 to 1
 imputedDF$Fitness <- range01(Fitness)
+death <- select(ds[ds$sampling_event==6,], overwinter_success, lab_ID)
+
+imputedDF <- merge(imputedDF, death)
+#imputedDF <-imputedDF[imputedDF$overwinter_success=="alive",]
 
 # print the sorted data set
-imputedDF[order(imputedDF$Fitness, decreasing = TRUE),]    
+orderedDF <- imputedDF[order(imputedDF$Fitness, decreasing = TRUE),]  
+orderedDF
+
+
+#write.csv(orderedDF[orderedDF$overwinter_success=="alive",], "modelselectionSARE22.csv")
+
+
+pcaDS <- orderedDF[!orderedDF$lab_ID==34,]
+pcaDS <- select(pcaDS, overwinter_success, varroa, nosema, hygienic, honey, weight, NormGenomeCopy)
+
+
+
+
+mod <- aov(pcaDS$honey~pcaDS$overwinter_success)
+summary(mod)
+
+boxplot(pcaDS$honey~pcaDS$overwinter_success)
+
+
+set.seed(123)
+ind <- sample(2, nrow(pcaDS),
+              replace = TRUE,
+              prob = c(0.6, 0.4))
+
+training <- pcaDS[ind==1,]
+testing <- pcaDS[ind==2,]
+
+
+
+
+linear <- lda(overwinter_success~., training)
+linear$scaling*1000000000000
+
+p1 <- predict(linear, training)$class
+tab <- table(Predicted = p1, Actual = training$overwinter_success)
+tab
+
+sum(diag(tab))/sum(tab)
+
+p2 <- predict(linear, testing)$class
+tab1 <- table(Predicted = p2, Actual = testing$overwinter_success)
+tab1
+sum(diag(tab1))/sum(tab1)
 
 
 
@@ -301,5 +385,65 @@ plot(sort(imputedDF$Fitness))
 hist(imputedDF$Fitness, breaks = 10)
 
 
-amounts <- 
 
+# constructing a =n LDA
+
+library("klaR")
+library(psych)
+library(MASS)
+library(ggord)
+library(devtools)
+
+
+# ##########################################################################################
+# # amounts in each reaction
+# amount <- rep(c(10^-2,10^-3, 10^-4, 10^-5, 10^-6, 10^-7, 10^-8, 10^-9), each = 5) * 4.11*10^10
+# 
+# # read in standard curve data
+# ct3 <- read.csv("Alger-SA-17238.csv")
+# x <- split(ct3, ct3$Target.Name)
+# ACTIN <- x$ACTIN$CT
+# DWV <- x$DWV$CT
+# DF <- data.frame(DWV, ACTIN)
+# 
+# # get standards
+# res <- pcr_assess(DF,
+#                     amount = amount,
+#                     method = 'standard_curve',
+#                   plot=T)
+# 
+# 
+# # get efficiency
+# pcr_assess(DF,
+#                  amount = amount,
+#                  reference_gene = 'ACTIN',
+#                  method = 'efficiency')
+# ##########################################################################################
+# 
+# 
+# source("BurnhamFunctionsSARE.R")
+# 
+# virusData <- read.csv("virusData.csv")
+# dilution <- read.csv("RNAdilutionsSARE.csv")
+# 
+
+# Program Body:
+# preliminary cleaning -> removes duplicate rows and control data
+#TempVarClean <- PrelimClean(data = virusData)
+
+# merge data sets to inlude dilution data for Normalization:
+#TempVarClean <- merge(TempVarClean, dilution, by = "ID", all.x = TRUE)
+
+# normalize data set Viral Load
+#TempVarClean <- VirusNorm(number_bees = 50, data = TempVarClean)
+
+# normalize viral laod by actin
+#TempVarClean <- actinNormal(data = TempVarClean)
+
+# make binary variable and use threashld of ct for limit of detection: 
+#TempVarClean <- CT_Threash(data = TempVarClean)
+
+#finalVirusDF <- TempVarClean [TempVarClean$target_name=="DWV",]
+#DWV_SARE2021 <- select(finalVirusDF, ID, NormGenomeCopy) 
+ 
+#write.csv(DWV_SARE2021, "DWV_SARE2021.csv")
