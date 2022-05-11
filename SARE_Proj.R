@@ -289,11 +289,8 @@ Fitness = (-1 * varroaScaled) +
 imputedDF$Fitness <- range01(Fitness)
 
 # print the sorted data set
-imputedDF[order(imputedDF$Fitness, decreasing = TRUE),]
+imputedDF[order(imputedDF$Fitness, decreasing = TRUE),]    
 
-
-# explicit print command:
-print(imputedDF)
 
 
 
@@ -304,5 +301,5 @@ plot(sort(imputedDF$Fitness))
 hist(imputedDF$Fitness, breaks = 10)
 
 
-#install.packages("dplyr", "ggplot2", "lme4", "tidyr", "viridis", "car", "imputeTS")
+amounts <- 
 
