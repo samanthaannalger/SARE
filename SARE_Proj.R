@@ -63,7 +63,7 @@ ds = filter(ds, !(lab_ID %in% unique_to_remove))
 
 #### VARROA ANALYSIS
 # aggregate mite load by sampling event and yard
-pltV_2021 <- ds_2021 %>% # operate on the dataframe (ds) and assign to new object (V)
+pltV <- ds %>% # operate on the dataframe (ds) and assign to new object (V)
   group_by(sampling_event, yard) %>% # pick variables to group by
   summarise(
     
@@ -77,7 +77,7 @@ pltV_2021 <- ds_2021 %>% # operate on the dataframe (ds) and assign to new objec
 
 # Plot the time series data by group (yard in this case)
 # the fist line of code calls in the data set and sets the variables
-ggplot(data=pltV_2021, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
+ggplot(data=pltV, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
   ylab("Varroa Load (mites/100 bees)") + # y axis label
   xlab("Sampling Event") + # x axis label
   theme_minimal(base_size = 17) + # size of the text and label ticks
@@ -90,7 +90,7 @@ ggplot(data=pltV_2021, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
 
 # statistical analysis 
 # create the model
-mod1 <- lmer(data=ds_2021, varroa_load_mites.100.bees ~ yard * sampling_event + (1|lab_ID))
+mod1 <- lmer(data=ds, varroa_load_mites.100.bees ~ yard * sampling_event + (1|lab_ID))
 summary(mod1) # look at the summary of the model
 Anova(mod1) # check significance 
 
