@@ -17,15 +17,17 @@ library(car)
 library(imputeTS)
 
 
+
+
+
+
 # load in data
 #ds <- read.csv("SARE_Field_database.csv", header = TRUE, stringsAsFactors = FALSE)
-ds <- read.csv("SARE_field_database2022.csv", header = TRUE, stringsAsFactors = FALSE)
+ds <- read.csv("SARE_field_database.csv", header = TRUE, stringsAsFactors = FALSE)
 virus <- read.csv("DWV_SARE2021.csv", header = TRUE, stringsAsFactors = FALSE)
-
 
 # colonies that were removed
 d <- ds[grepl(ds$comments, pattern = "removed from", fixed = TRUE),]
-
 
 # make sure ids are unique
 unique_to_remove <- unique(d$lab_ID)
@@ -33,10 +35,35 @@ unique_to_remove <- unique(d$lab_ID)
 # pull rows out that match these values
 ds = filter(ds, !(lab_ID %in% unique_to_remove))
 
+# this is where we split by year
+# ds_2021 <- 
+# ds_2022 <-
+
+
+
+
+
+
+
+# create fake dataset for demo purposes
+#year <- c(2021, 2021, 2022, 2022)
+#var <- c("a", "b", "a", "b")
+#dataF <- data.frame(year, var)
+
+# split data set by year
+#splitDF <- split(dataF, dataF$year)
+
+# assign to year df
+#df_2021 <- splitDF$`2021`
+#df_2022 <- splitDF$`2022`
+
+
+
+
 
 #### VARROA ANALYSIS
 # aggregate mite load by sampling event and yard
-pltV <- ds %>% # operate on the dataframe (ds) and assign to new object (V)
+pltV_2021 <- ds_2021 %>% # operate on the dataframe (ds) and assign to new object (V)
   group_by(sampling_event, yard) %>% # pick variables to group by
   summarise(
     
@@ -50,7 +77,7 @@ pltV <- ds %>% # operate on the dataframe (ds) and assign to new object (V)
 
 # Plot the time series data by group (yard in this case)
 # the fist line of code calls in the data set and sets the variables
-ggplot(data=pltV, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
+ggplot(data=pltV_2021, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
   ylab("Varroa Load (mites/100 bees)") + # y axis label
   xlab("Sampling Event") + # x axis label
   theme_minimal(base_size = 17) + # size of the text and label ticks
@@ -63,10 +90,8 @@ ggplot(data=pltV, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
 
 # statistical analysis 
 # create the model
-mod1 <- lmer(data=ds, varroa_load_mites.100.bees ~ yard * sampling_event + (1|lab_ID))
-
+mod1 <- lmer(data=ds_2021, varroa_load_mites.100.bees ~ yard * sampling_event + (1|lab_ID))
 summary(mod1) # look at the summary of the model
-
 Anova(mod1) # check significance 
 
 
@@ -111,23 +136,23 @@ Anova(mod1) # check significance
 
 
 
-#### HYGIENIC BEHAVIOR ANALYSIS
-## here we are adding hygienic behavior to every instnace of each I
+#### FKA 2021 ANALYSIS
+## here we are adding hygienic behavior to every instance of each
 
 # subset of dataset with rows that have a LN2 test
 testedDS <- ds[!is.na(ds$HB_percentile),]
+
+
 # select only columns we need
 testedDS <- select(testedDS, lab_ID, HB_percentile)
 
 # change column names
 colnames(testedDS) <- c("lab_ID", "percent_hygienic")
 
-# merge hygieneic behavior back in
-ds=merge(x=ds, y=testedDS, all.x = TRUE)
-
+# merge hygienic behavior back in
+ds <- merge(x=ds, y=testedDS, all.x = TRUE)
 
 ## Plot HB by varroa load
-
 # Add regression lines
 ggplot(ds, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
                color=as.character(sampling_event))) +
@@ -226,6 +251,38 @@ ggplot(dst1, aes(x=yard, y=frame_of_bees, color=yard)) +
   scale_color_viridis(discrete = TRUE, option="H") # color pallets option = A-H
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##################################################################################
+### Code Stop (section models below for spring)
+##################################################################################
 
 
 ##################################################################################
@@ -328,11 +385,14 @@ imputedDF$Fitness <- range01(Fitness)
 death <- select(ds[ds$sampling_event==6,], overwinter_success, lab_ID)
 
 imputedDF <- merge(imputedDF, death)
-#imputedDF <-imputedDF[imputedDF$overwinter_success=="alive",]
+tp6 <- read.csv("TP6Data.csv")
+
+imputedDF <- merge(imputedDF, tp6)
 
 # print the sorted data set
 orderedDF <- imputedDF[order(imputedDF$Fitness, decreasing = TRUE),]  
 orderedDF
+
 
 
 #write.csv(orderedDF[orderedDF$overwinter_success=="alive",], "modelselectionSARE22.csv")
@@ -388,7 +448,7 @@ hist(imputedDF$Fitness, breaks = 10)
 
 # constructing a =n LDA
 
-library("klaR")
+library(klaR)
 library(psych)
 library(MASS)
 library(ggord)
