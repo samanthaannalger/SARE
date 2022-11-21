@@ -18,9 +18,6 @@ library(imputeTS)
 
 
 
-
-
-
 # load in data
 #ds <- read.csv("SARE_Field_database2022.csv", header = TRUE, stringsAsFactors = FALSE)
 ds <- read.csv("SARE_field_database2022.csv", header = TRUE, stringsAsFactors = FALSE)
@@ -36,25 +33,17 @@ unique_to_remove <- unique(d$lab_ID)
 ds = filter(ds, !(lab_ID %in% unique_to_remove))
 
 # this is where we split by year
-
 ds_2021<- ds[ds$year == 2021, ]
 ds_2022 <- ds[ds$year == 2022, ]
 
 
-# create fake dataset for demo purposes
-#year <- c(2021, 2021, 2022, 2022)
-#var <- c("a", "b", "a", "b")
-#dataF <- data.frame(year, var)
-
-# split data set by year
-#splitDF <- split(dataF, dataF$year)
-
-# assign to year df
-#df_2021 <- splitDF$`2021`
-#df_2022 <- splitDF$`2022`
 
 
 
+
+############################################################################
+# 2021 Analysis
+############################################################################
 
 #### VARROA ANALYSIS
 # aggregate mite load by sampling event and yard
@@ -91,8 +80,6 @@ Anova(mod1) # check significance
 
 
 
-
-
 #### NOSEMA ANALYSIS
 # aggregate nosema load by sampling event and yard
 pltN <- ds_2021 %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
@@ -122,12 +109,8 @@ ggplot(data=pltN, aes(x=sampling_event, y=mean, group=yard, color=yard)) +
 # statistical analysis 
 # create the model
 mod1 <- lmer(data=ds, nosema_load_spores.bee ~ yard * sampling_event + (1|lab_ID))
-
 summary(mod1) # look at the summary of the model
-
 Anova(mod1) # check significance 
-
-
 
 
 
@@ -172,12 +155,10 @@ ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
   xlab("Percent Hygienic Behavior") + # x axis label
   theme_minimal(base_size = 17) # size of the text and label ticks
 
-# MODEL NOT WORKING-- unexpected symbol in mod2
+
 # HB by varroa load model
-mod2 <- lm(data=ds, varroa_load_mites.100.bees ~ percent_hygienic  sampling_event )
-
+mod2 <- lm(data=ds, varroa_load_mites.100.bees ~ percent_hygienic + sampling_event )
 summary(mod2)
-
 Anova(mod2)
 
 
@@ -211,8 +192,6 @@ ds_2021[order(ds_2021$percent_hygienic, decreasing = TRUE),]
 
 
 
-
-
 ##### HONEY YIELD ANALYSIS
 # take only sampling event 4
 dst4 <- ds_2021[ds_2021$sampling_event==4,]
@@ -227,7 +206,6 @@ ggplot(dst4, aes(x=yard, y=honey_removed, color=yard)) +
   theme_minimal(base_size = 17) + # size of the text and label ticks
   theme(legend.position = "none") + # place the legend at the top
   scale_color_viridis(discrete = TRUE, option="H") # color pallets option = A-H
-
 
 
 
@@ -248,10 +226,190 @@ ggplot(dst1, aes(x=yard, y=frame_of_bees, color=yard)) +
 
 
 
+# 2021 percent hygienic freeze kill
+ds_2021$FK_binary <- ifelse(ds_2021$FKB_percentile >= 0.95, 1,0) #"hygienic", "nonhygienic")
+mean(ds_2021$FK_binary, na.rm=T) # get percentage of hygienic UBO
 
 
 
 
+
+
+
+
+
+
+
+
+##############################################################################
+# 2022 Data Analysis
+##############################################################################
+
+#### FKA 2022 ANALYSIS
+## here we are adding hygienic behavior to every instance of each
+
+# subset of dataset with rows that have a LN2 test
+FKB_2022 <- ds_2022[!is.na(ds_2022$FKB_percentile),]
+UBO_2022 <- ds_2022[!is.na(ds_2022$UBO_assay_score),]
+
+# select only columns we need
+FKB_2022 <- select(FKB_2022, lab_ID, FKB_percentile)
+UBO_2022 <- select(UBO_2022, lab_ID, UBO_assay_score)
+
+# change column names
+colnames(FKB_2022) <- c("lab_ID", "percent_hygienic")
+colnames(UBO_2022) <- c("lab_ID", "UBO_assay_score_merged")
+
+# merge hygienic behavior back in
+ds_2022 <- merge(x=ds_2022, y=FKB_2022, all.x = TRUE)
+ds_2022 <- merge(x=ds_2022, y=UBO_2022, all.x = TRUE)
+
+## Plot freeze kill by varroa load
+# Add regression lines
+ggplot(ds_2022, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
+                    color=as.character(sampling_event))) +
+  #geom_point(size=0) + 
+  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+  geom_point(size=2) +
+  ylab("Varroa Load (mites/100 bees)") + # y axis label
+  xlab("Percent Hygienic Behavior") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
+  #geom_text(aes(label=lab_ID)) +
+  guides(color = guide_legend(override.aes = list(label = '')))
+
+# new plot that removes time points as a factor
+ggplot(ds_2022, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
+  #geom_point(size=0) + 
+  geom_smooth(method=lm, se=TRUE, fullrange=TRUE) +
+  geom_point(size=2) +
+  ylab("Varroa Load (mites/100 bees)") + # y axis label
+  xlab("Percent Hygienic Behavior") + # x axis label
+  theme_minimal(base_size = 17) # size of the text and label ticks
+
+
+# create binary variable for Freeze Kill
+ds_2022$FK_binary <- ifelse(ds_2022$percent_hygienic >= 0.95, 1, 0) #"hygienic", "nonhygienic")
+mean(ds_2022$FK_binary, na.rm=T) # get percentage of hygienic FK
+
+# create binary variable for UBO 
+ds_2022$UBO_binary <- ifelse(ds_2022$UBO_assay_score >= 0.65, 1, 0) #"hygienic", "nonhygienic")
+mean(ds_2022$UBO_binary, na.rm=T) # get percentage of hygienic UBO
+
+# create binary variable for UBO for merged UBO dataset
+ds_2022$UBO_binary_merged <- ifelse(ds_2022$UBO_assay_score_merged >= 0.65, 1, 0) #"hygienic", "nonhygienic")
+mean(ds_2022$UBO_binary, na.rm=T) # get percentage of hygienic UBO
+
+# differences in freeze kill between selection processes
+boxplot(ds_2022$percent_hygienic ~ ds_2022$treatment_grp)
+mod <- aov(ds_2022$percent_hygienic ~ ds_2022$treatment_grp)
+summary(mod)
+
+# differences in freeze kill between selction processes
+boxplot(ds_2022$UBO_assay_score ~ ds_2022$treatment_grp)
+mod <- aov(ds_2022$UBO_assay_score ~ ds_2022$treatment_grp)
+summary(mod)
+
+# fisher exaxt tests (non parametric chi-square tests for selection method by 
+# prortion hygienic)
+fisher.test(y = ds_2022$FK_binary, x = ds_2022$treatment_grp)
+fisher.test(y = ds_2022$UBO_binary, x = ds_2022$treatment_grp)
+
+# varroa load by group FHA vs NPQ (ANOVA)
+mod <- aov(ds_2022$varroa_load_mites.100.bees ~ ds_2022$treatment_grp)
+summary(mod)
+
+# varroa load by UBO Binary
+boxplot(ds_2022$varroa_load_mites.100.bees~ds_2022$UBO_binary)
+summary(aov(ds_2022$varroa_load_mites.100.bees~ds_2022$UBO_binary))
+
+# select august course
+August_Data = ds_2022[ds_2022$sampling_event == 9,] # UBO SE7
+
+# varroa load by FK Binary August
+boxplot(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary)
+summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary))
+
+# varroa load by UBO Binary August
+boxplot(August_Data$varroa_load_mites.100.bees ~ August_Data$UBO_binary_merged)
+summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$UBO_binary_merged))
+
+hist(August_Data$varroa_load_mites.100.bees)
+
+# NEW ANALYSIS!!! nosema load by group FHA vs NPQ (ANOVA)
+
+# NEW ANALYSIS!!! virus load by group FHA vs NPQ (ANOVA)
+
+# NEW ANALYSIS!!! FKA (binary/continuous) by varroa load (omit treated hives)
+
+# NEW ANALYSIS!!! UBO (binary/continuous) by varroa load (omit treated hives)
+
+# NEW ANALYSIS!!! FKA (binary/continuous) by nosema load (omit treated hives)
+
+# NEW ANALYSIS!!! UBO (binary)/continuous by nosema load (omit treated hives)
+
+# NEW ANALYSIS!!! FKA (binary/continuous) by virus load (omit treated hives)
+
+# NEW ANALYSIS!!! UBO (binary/continuous) by virus load (omit treated hives)
+
+# NEW ANALYSIS!!! FKA by UBO categorical and continuous 
+
+
+
+
+## Plot UBO by varroa load
+# Add regression lines
+ggplot(ds_2022, aes(x=UBO_assay_score, y=varroa_load_mites.100.bees, 
+                    color=as.character(sampling_event))) +
+  #geom_point(size=0) + 
+  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+  geom_point(size=2) +
+  ylab("Varroa Load (mites/100 bees)") + # y axis label
+  xlab("Percent Hygienic Behavior") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
+  #geom_text(aes(label=lab_ID)) +
+  guides(color = guide_legend(override.aes = list(label = '')))
+
+
+
+# MODEL NOT WORKING-- unexpected symbol in mod2
+# HB by varroa load model
+mod2 <- lm(data=ds_2022, varroa_load_mites.100.bees ~ percent_hygienic + sampling_event)
+summary(mod2)
+
+Anova(mod2)
+
+
+# plot Hygienic behavior by yard
+
+# not sure if needed here--->
+# take only sampling event 2
+# dst2 <- ds[ds$sampling_event==2,]
+
+# Hygienic behavior by hive/yard, points number of hives, threshold dotted bar
+ggplot(ds_2022, aes(x=yard, y=percent_hygienic, color=yard)) + 
+  geom_boxplot(size=1) +
+  geom_text(aes(label=lab_ID), size=5) +
+  guides(color = guide_legend(override.aes = list(label = ''))) +
+  ylab("Percent Hygienic Behavior") + # y axis label
+  xlab("Bee Yard") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "none") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H") +# color pallets option = A-H
+  geom_hline(yintercept=.8, linetype="dashed",
+             color = "red", size=1)
+
+
+# set up the model
+mod3 <- aov(data = ds_2022, percent_hygienic ~ yard)
+summary(mod3)
+
+
+# print table in increasing order based on some variable
+ds_2022[order(ds_2022$percent_hygienic, decreasing = TRUE),]
 
 
 
@@ -289,13 +447,13 @@ ggplot(dst1, aes(x=yard, y=frame_of_bees, color=yard)) +
 modelDF <- ds_2021 %>% # operate on the dataframe (ds) and assign to new object 
   group_by(lab_ID, yard) %>% # pick variables to group by
   summarise(
-            varroa = mean(varroa_load_mites.100.bees, na.rm=T),
-            nosema = mean(nosema_load_spores.bee, na.rm=T),
-            hygienic = mean(FKB_percentile, na.rm=T),
-            honey = mean(honey_removed, na.rm=T),
-            weight = mean(october_weight, na.rm=T)
+    varroa = mean(varroa_load_mites.100.bees, na.rm=T),
+    nosema = mean(nosema_load_spores.bee, na.rm=T),
+    hygienic = mean(FKB_percentile, na.rm=T),
+    honey = mean(honey_removed, na.rm=T),
+    weight = mean(october_weight, na.rm=T)
     
-            ) 
+  ) 
 
 
 modelDF <- merge(modelDF, virus, by = c("lab_ID"))
@@ -311,7 +469,7 @@ imputedDF <- cbind(imputedDF, modelDF[,1:2])
 # create function to rescale
 range01 <- function(x){
   (x-min(x))/(max(x)-min(x))
-  }
+}
 
 
 
@@ -501,91 +659,7 @@ library(devtools)
 
 #finalVirusDF <- TempVarClean [TempVarClean$target_name=="DWV",]
 #DWV_SARE2021 <- select(finalVirusDF, ID, NormGenomeCopy) 
- 
+
 #write.csv(DWV_SARE2021, "DWV_SARE2021.csv")
-
-
-##############################################################################
-# 2022 Data Analysis
-##############################################################################
-
-#### FKA 2022 ANALYSIS
-## here we are adding hygienic behavior to every instance of each
-
-# subset of dataset with rows that have a LN2 test
-FKB_2022 <- ds_2022[!is.na(ds_2022$FKB_percentile),]
-
-
-# select only columns we need
-FKB_2022 <- select(FKB_2022, lab_ID, FKB_percentile)
-
-# change column names
-colnames(FKB_2022) <- c("lab_ID", "percent_hygienic")
-
-# merge hygienic behavior back in
-ds_2022 <- merge(x=ds_2022, y=FKB_2022, all.x = TRUE)
-
-## Plot HB by varroa load
-# Add regression lines
-ggplot(ds_2022, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
-                    color=as.character(sampling_event))) +
-  #geom_point(size=0) + 
-  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
-  geom_point(size=2) +
-  ylab("Varroa Load (mites/100 bees)") + # y axis label
-  xlab("Percent Hygienic Behavior") + # x axis label
-  theme_minimal(base_size = 17) + # size of the text and label ticks
-  theme(legend.position = "top") + # place the legend at the top
-  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
-  #geom_text(aes(label=lab_ID)) +
-  guides(color = guide_legend(override.aes = list(label = '')))
-
-
-# new plot that removes time points as a factor
-ggplot(ds_2022, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
-  #geom_point(size=0) + 
-  geom_smooth(method=lm, se=TRUE, fullrange=TRUE) +
-  geom_point(size=2) +
-  ylab("Varroa Load (mites/100 bees)") + # y axis label
-  xlab("Percent Hygienic Behavior") + # x axis label
-  theme_minimal(base_size = 17) # size of the text and label ticks
-
-# MODEL NOT WORKING-- unexpected symbol in mod2
-# HB by varroa load model
-mod2 <- lm(data=ds_2022, varroa_load_mites.100.bees ~ percent_hygienic  sampling_event )
-
-summary(mod2)
-
-Anova(mod2)
-
-
-# plot Hygienic behavior by yard
-
-# not sure if needed here--->
-# take only sampling event 2
-# dst2 <- ds[ds$sampling_event==2,]
-
-# Hygienic behavior by hive/yard, points number of hives, threshold dotted bar
-ggplot(ds_2022, aes(x=yard, y=percent_hygienic, color=yard)) + 
-  geom_boxplot(size=1) +
-  geom_text(aes(label=lab_ID), size=5) +
-  guides(color = guide_legend(override.aes = list(label = ''))) +
-  ylab("Percent Hygienic Behavior") + # y axis label
-  xlab("Bee Yard") + # x axis label
-  theme_minimal(base_size = 17) + # size of the text and label ticks
-  theme(legend.position = "none") + # place the legend at the top
-  scale_color_viridis(discrete = TRUE, option="H") +# color pallets option = A-H
-  geom_hline(yintercept=.8, linetype="dashed",
-             color = "red", size=1)
-
-
-# set up the model
-mod3 <- aov(data = ds_2022, percent_hygienic ~ yard)
-summary(mod3)
-
-
-# print table in increasing order based on some variable
-ds_2022[order(ds_2022$percent_hygienic, decreasing = TRUE),]
-
 
 
