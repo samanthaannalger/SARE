@@ -350,6 +350,8 @@ summary(mod4)
 boxplot(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary)
 summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary))
 
+#hello
+
 # NEW ANALYSIS!!! UBO (binary/continuous) by varroa load (omit treated hives)
 
 # NEW ANALYSIS!!! FKA (binary/continuous) by nosema load (omit treated hives)
