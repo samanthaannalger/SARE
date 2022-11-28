@@ -36,8 +36,12 @@ ds = filter(ds, !(lab_ID %in% unique_to_remove))
 ds_2021<- ds[ds$year == 2021, ]
 ds_2022 <- ds[ds$year == 2022, ]
 
+# for 2022 create a column that denotes whether a colony was treated for varroa mites
+# check sampling event number for future analyses
+ds_2022$varroaTreated <- ifelse(ds_2022$sampling_event == 9 & ds_2022$varroa_load_mites.100.bees >= 2, "treated", "not_treated")
 
-
+# removing colonies that were treated
+ds_2022 <- ds_2022[ds_2022$varroaTreated == "not_treated",]
 
 
 
