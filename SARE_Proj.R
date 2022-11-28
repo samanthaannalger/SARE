@@ -338,10 +338,17 @@ summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$UBO_binary_merg
 hist(August_Data$varroa_load_mites.100.bees)
 
 # NEW ANALYSIS!!! nosema load by group FHA vs NPQ (ANOVA)
+mod4 <- aov(ds_2022$nosema_load_spores.bee ~ ds_2022$treatment_grp)
+summary(mod4)
 
 # NEW ANALYSIS!!! virus load by group FHA vs NPQ (ANOVA)
+##mod5 <- aov(ds_2022$virus_count ~ ds_2022$treatment_grp)
+##summary(mod5)
+## no 2022 data in virus count
 
 # NEW ANALYSIS!!! FKA (binary/continuous) by varroa load (omit treated hives)
+boxplot(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary)
+summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary))
 
 # NEW ANALYSIS!!! UBO (binary/continuous) by varroa load (omit treated hives)
 
