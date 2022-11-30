@@ -387,7 +387,7 @@ ggplot(ds_2022, aes(x=percent_hygienic, y=nosema_load_spores.bee,
 
 # nosema load by FK Binary (all nosema sampling events)
 boxplot(ds_2022$nosema_load_spores.bee ~ ds_2022$FK_binary)
-summary(aov(ds_2022$varroa_load_mites.100.bees ~ ds_2022$FK_binary))
+summary(aov(ds_2022$nosema_load_spores.bee ~ ds_2022$FK_binary))
 
 # NEW ANALYSIS!!! UBO (binary/continuous) by nosema load (omit treated hives)
 ## Plot UBO by nosema load (continuous)
@@ -410,11 +410,6 @@ boxplot(ds_2022$nosema_load_spores.bee~ds_2022$UBO_binary)
 summary(aov(ds_2022$nosema_load_spores.bee~ds_2022$UBO_binary))
 
 
-
-
-
-
-
 # NEW ANALYSIS!!! FKA (binary/continuous) by virus load (omit treated hives)
 ## Plot FKA by virus load (continuous)
 ggplot(ds_2022, aes(x=percent_hygienic, y=virus_count, 
@@ -422,7 +417,7 @@ ggplot(ds_2022, aes(x=percent_hygienic, y=virus_count,
   #geom_point(size=0) + 
   geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
   geom_point(size=2) +
-  ylab("Virus Count)") + # y axis label
+  ylab("Virus Count") + # y axis label
   xlab("Percent Hygienic Behavior") + # x axis label
   theme_minimal(base_size = 17) + # size of the text and label ticks
   theme(legend.position = "top") + # place the legend at the top
@@ -437,7 +432,6 @@ summary(aov(ds_2022$virus_count ~ ds_2022$FK_binary))
 
 
 # NEW ANALYSIS!!! UBO (binary/continuous) by virus load (omit treated hives)
-
 ## Plot UBO by virus load (continuous)
 # Add regression lines
 ggplot(ds_2022, aes(x=UBO_assay_score, y=virus_count, 
@@ -445,7 +439,7 @@ ggplot(ds_2022, aes(x=UBO_assay_score, y=virus_count,
   #geom_point(size=0) + 
   geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
   geom_point(size=2) +
-  ylab("Nosema Load (spores/bees)") + # y axis label
+  ylab("Virus Count") + # y axis label
   xlab("Percent Hygienic Behavior") + # x axis label
   theme_minimal(base_size = 17) + # size of the text and label ticks
   theme(legend.position = "top") + # place the legend at the top
@@ -458,12 +452,28 @@ boxplot(ds_2022$virus_count~ds_2022$UBO_binary)
 summary(aov(ds_2022$virus_count~ds_2022$UBO_binary))
 
 
-
-
-
-
-
 # NEW ANALYSIS!!! FKA by UBO categorical and continuous 
+## Plot FKA by UBO (continuous)
+# Add regression lines
+ggplot(ds_2022, aes(x=UBO_assay_score, y=percent_hygienic, 
+                    color=as.character(sampling_event))) +
+  #geom_point(size=0) + 
+  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+  geom_point(size=2) +
+  ylab("FKB Assay Percent") + # y axis label
+  xlab("UBO Assay Percent") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
+  #geom_text(aes(label=lab_ID)) +
+  guides(color = guide_legend(override.aes = list(label = '')))
+
+## FKA by UBO (Binary)
+mosaicplot(ds_2022$FK_binary~ds_2022$UBO_binary)
+summary(aov(ds_2022$FK_binary~ds_2022$UBO_binary))
+
+
+
 ## Plot UBO by varroa load (continuous)
 # Add regression lines
 ggplot(ds_2022, aes(x=UBO_assay_score, y=varroa_load_mites.100.bees, 
@@ -494,7 +504,7 @@ Anova(mod2)
 # take only sampling event 2
 # dst2 <- ds[ds$sampling_event==2,]
 
-# Hygienic behavior by hive/yard, points number of hives, threshold dotted bar
+# FKA by hive/yard, points number of hives, threshold dotted bar
 ggplot(ds_2022, aes(x=yard, y=percent_hygienic, color=yard)) + 
   geom_boxplot(size=1) +
   geom_text(aes(label=lab_ID), size=5) +
@@ -504,7 +514,7 @@ ggplot(ds_2022, aes(x=yard, y=percent_hygienic, color=yard)) +
   theme_minimal(base_size = 17) + # size of the text and label ticks
   theme(legend.position = "none") + # place the legend at the top
   scale_color_viridis(discrete = TRUE, option="H") +# color pallets option = A-H
-  geom_hline(yintercept=.8, linetype="dashed",
+  geom_hline(yintercept=.95, linetype="dashed",
              color = "red", size=1)
 
 
@@ -517,8 +527,18 @@ summary(mod3)
 ds_2022[order(ds_2022$percent_hygienic, decreasing = TRUE),]
 
 
-
-
+# UBO by hive/yard, points number of hives, threshold dotted bar
+ggplot(ds_2022, aes(x=yard, y=UBO_assay_score, color=yard)) + 
+  geom_boxplot(size=1) +
+  geom_text(aes(label=lab_ID), size=5) +
+  guides(color = guide_legend(override.aes = list(label = ''))) +
+  ylab("Percent Hygienic Behavior") + # y axis label
+  xlab("Bee Yard") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "none") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H") +# color pallets option = A-H
+  geom_hline(yintercept=.6, linetype="dashed",
+             color = "red", size=1)
 
 
 
