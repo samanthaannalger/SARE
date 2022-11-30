@@ -268,9 +268,24 @@ colnames(UBO_2022) <- c("lab_ID", "UBO_assay_score_merged")
 ds_2022 <- merge(x=ds_2022, y=FKB_2022, all.x = TRUE)
 ds_2022 <- merge(x=ds_2022, y=UBO_2022, all.x = TRUE)
 
-## Plot freeze kill by varroa load
+## Plot freeze kill by varroa load (continuous/ all varroa sampling events)
 # Add regression lines
 ggplot(ds_2022, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
+                    color=as.character(sampling_event))) +
+  #geom_point(size=0) + 
+  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+  geom_point(size=2) +
+  ylab("Varroa Load (mites/100 bees)") + # y axis label
+  xlab("Percent Hygienic Behavior") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
+  #geom_text(aes(label=lab_ID)) +
+  guides(color = guide_legend(override.aes = list(label = '')))
+
+## Plot freeze kill by varroa load (continuous/ only sampling event 9)
+# Add regression lines
+ggplot(August_Data, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
                     color=as.character(sampling_event))) +
   #geom_point(size=0) + 
   geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
@@ -350,17 +365,49 @@ summary(mod4)
 ##summary(mod5)
 ## no 2022 data in virus count
 
-# NEW ANALYSIS!!! FKA (binary/continuous) by varroa load (omit treated hives)
-boxplot(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary)
-summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary))
+# ALREADY COMPLETED!!! FKA (binary/continuous) by varroa load (omit treated hives)
 
-#hello
-
-# NEW ANALYSIS!!! UBO (binary/continuous) by varroa load (omit treated hives)
+# ALREADY COMPLETED!!! UBO (binary/continuous) by varroa load (omit treated hives)
 
 # NEW ANALYSIS!!! FKA (binary/continuous) by nosema load (omit treated hives)
+## Plot freeze kill by nosema load (continuous/ all nosema sampling events)
+# Add regression lines
+ggplot(ds_2022, aes(x=percent_hygienic, y=nosema_load_spores.bee, 
+                        color=as.character(sampling_event))) +
+  #geom_point(size=0) + 
+  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+  geom_point(size=2) +
+  ylab("Nosema Load (spores/bee)") + # y axis label
+  xlab("Percent Hygienic Behavior") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
+  #geom_text(aes(label=lab_ID)) +
+  guides(color = guide_legend(override.aes = list(label = '')))
 
-# NEW ANALYSIS!!! UBO (binary)/continuous by nosema load (omit treated hives)
+# nosema load by FK Binary (all nosema sampling events)
+boxplot(ds_2022$nosema_load_spores.bee ~ ds_2022$FK_binary)
+summary(aov(ds_2022$varroa_load_mites.100.bees ~ ds_2022$FK_binary))
+
+# NEW ANALYSIS!!! UBO (binary/continuous) by nosema load (omit treated hives)
+## Plot UBO by nosema load (continuous)
+# Add regression lines
+ggplot(ds_2022, aes(x=UBO_assay_score, y=nosema_load_spores.bee, 
+                    color=as.character(sampling_event))) +
+  #geom_point(size=0) + 
+  geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
+  geom_point(size=2) +
+  ylab("Nosema Load (spores/bees)") + # y axis label
+  xlab("Percent Hygienic Behavior") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
+  #geom_text(aes(label=lab_ID)) +
+  guides(color = guide_legend(override.aes = list(label = '')))
+
+# nosema load by UBO Binary
+boxplot(ds_2022$nosema_load_spores.bee~ds_2022$UBO_binary)
+summary(aov(ds_2022$nosema_load_spores.bee~ds_2022$UBO_binary))
 
 # NEW ANALYSIS!!! FKA (binary/continuous) by virus load (omit treated hives)
 
@@ -369,9 +416,7 @@ summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary))
 # NEW ANALYSIS!!! FKA by UBO categorical and continuous 
 
 
-
-
-## Plot UBO by varroa load
+## Plot UBO by varroa load (continuous)
 # Add regression lines
 ggplot(ds_2022, aes(x=UBO_assay_score, y=varroa_load_mites.100.bees, 
                     color=as.character(sampling_event))) +
@@ -385,7 +430,6 @@ ggplot(ds_2022, aes(x=UBO_assay_score, y=varroa_load_mites.100.bees,
   scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
   #geom_text(aes(label=lab_ID)) +
   guides(color = guide_legend(override.aes = list(label = '')))
-
 
 
 # MODEL NOT WORKING-- unexpected symbol in mod2
