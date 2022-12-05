@@ -372,6 +372,8 @@ summary(mod4)
 # NEW ANALYSIS!!! FKA (binary/continuous) by nosema load (omit treated hives)
 ## Plot freeze kill by nosema load (continuous/ all nosema sampling events)
 # Add regression lines
+
+
 ggplot(ds_2022, aes(x=percent_hygienic, y=nosema_load_spores.bee, 
                         color=as.character(sampling_event))) +
   #geom_point(size=0) + 
@@ -459,14 +461,20 @@ ggplot(ds_2022, aes(x=UBO_assay_score, y=percent_hygienic,
                     color=as.character(sampling_event))) +
   #geom_point(size=0) + 
   geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
-  geom_point(size=2) +
+  geom_point(size=3) +
   ylab("FKB Assay Percent") + # y axis label
   xlab("UBO Assay Percent") + # x axis label
   theme_minimal(base_size = 17) + # size of the text and label ticks
-  theme(legend.position = "top") + # place the legend at the top
+  theme(legend.position = c(5,5)) + # place the legend at the top
   scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
   #geom_text(aes(label=lab_ID)) +
   guides(color = guide_legend(override.aes = list(label = '')))
+
+
+
+cor.test(ds_2022[ds_2022$sampling_event==7,]$UBO_assay_score_merged, ds_2022[ds_2022$sampling_event==7,]$percent_hygienic,  method="spearman", exact = F)
+
+
 
 ## FKA by UBO (Binary)
 mosaicplot(ds_2022$FK_binary~ds_2022$UBO_binary)
