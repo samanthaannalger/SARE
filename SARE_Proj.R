@@ -279,7 +279,7 @@ ggplot(ds_2022, aes(x=percent_hygienic, y=varroa_load_mites.100.bees,
   xlab("Percent Hygienic Behavior") + # x axis label
   theme_minimal(base_size = 17) + # size of the text and label ticks
   theme(legend.position = "top") + # place the legend at the top
-  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
+  scale_color_manual(values = c("coral2", "grey", "deepskyblue2"), name="Time Point:") + # color pallets option = A-H
   #geom_text(aes(label=lab_ID)) +
   guides(color = guide_legend(override.aes = list(label = '')))
 
@@ -292,9 +292,10 @@ ggplot(August_Data, aes(x=percent_hygienic, y=varroa_load_mites.100.bees,
   geom_point(size=2) +
   ylab("Varroa Load (mites/100 bees)") + # y axis label
   xlab("Percent Hygienic Behavior") + # x axis label
+  ggtitle("FKB Assay Percent by Varroa Load") +
   theme_minimal(base_size = 17) + # size of the text and label ticks
   theme(legend.position = "top") + # place the legend at the top
-  scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
+  scale_color_manual(values = c("deepskyblue2"), name="Time Point:") + # color pallets option = A-H
   #geom_text(aes(label=lab_ID)) +
   guides(color = guide_legend(override.aes = list(label = '')))
 
@@ -305,28 +306,48 @@ ggplot(ds_2022, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
   geom_point(size=2) +
   ylab("Varroa Load (mites/100 bees)") + # y axis label
   xlab("Percent Hygienic Behavior") + # x axis label
+  ggtitle("FKB Assay Percent by Varroa Load (composite)") +
   theme_minimal(base_size = 17) # size of the text and label ticks
 
 
 # create binary variable for Freeze Kill
-ds_2022$FK_binary <- ifelse(ds_2022$percent_hygienic >= 0.95, 1, 0) #"hygienic", "nonhygienic")
+ds_2022$FK_binary <- ifelse(ds_2022$percent_hygienic >= 0.95, "hygienic", "non-hygienic")
 mean(ds_2022$FK_binary, na.rm=T) # get percentage of hygienic FK
 
 # create binary variable for UBO 
-ds_2022$UBO_binary <- ifelse(ds_2022$UBO_assay_score >= 0.65, 1, 0) #"hygienic", "nonhygienic")
+ds_2022$UBO_binary <- ifelse(ds_2022$UBO_assay_score >= 0.60, "hygienic", "non-hygienic") #"hygienic", "nonhygienic")
 mean(ds_2022$UBO_binary, na.rm=T) # get percentage of hygienic UBO
 
 # create binary variable for UBO for merged UBO dataset
-ds_2022$UBO_binary_merged <- ifelse(ds_2022$UBO_assay_score_merged >= 0.65, 1, 0) #"hygienic", "nonhygienic")
+ds_2022$UBO_binary_merged <- ifelse(ds_2022$UBO_assay_score_merged >= 0.60, "hygienic", "non-hygienic") #"hygienic", "nonhygienic")
 mean(ds_2022$UBO_binary, na.rm=T) # get percentage of hygienic UBO
 
 # differences in freeze kill between selection processes
-boxplot(ds_2022$percent_hygienic ~ ds_2022$treatment_grp)
+ggplot(ds_2022, aes(x=treatment_grp, y=percent_hygienic, color=treatment_grp, na.rm=T))+
+  geom_boxplot(size=1) + 
+  ylab("Percent Hygienic Behavior") + # y axis label
+  xlab("Treatment Group") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_manual(values = c("darkseagreen4","darkorange"), name="Treatment Group:")# color pallets option = A-H
+  #geom_text(aes(label=lab_ID)) +
+  
 mod <- aov(ds_2022$percent_hygienic ~ ds_2022$treatment_grp)
 summary(mod)
 
+
 # differences in freeze kill between selction processes
-boxplot(ds_2022$UBO_assay_score ~ ds_2022$treatment_grp)
+ggplot(ds_2022, aes(x=treatment_grp, y=UBO_assay_score, color=treatment_grp)) +
+  geom_boxplot(size=1) +
+  ylab("Percent Hygienic Behavior") + # y axis label
+  xlab("Treatment Group") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_manual(values = c("darkseagreen4","darkorange"), name="Treatment Group:")# color pallets option = A-H
+
+
+
+#geom_text(aes(label=lab_ID)) +
 mod <- aov(ds_2022$UBO_assay_score ~ ds_2022$treatment_grp)
 summary(mod)
 
@@ -340,18 +361,40 @@ mod <- aov(ds_2022$varroa_load_mites.100.bees ~ ds_2022$treatment_grp)
 summary(mod)
 
 # varroa load by UBO Binary
-boxplot(ds_2022$varroa_load_mites.100.bees~ds_2022$UBO_binary)
+ggplot(ds_2022 %>% filter(!is.na(UBO_binary)), aes(x=UBO_binary, y=varroa_load_mites.100.bees, color=UBO_binary))+
+ geom_boxplot(size=1) + 
+ ylab("Varroa Load (mites/100 bees)") + # y axis label
+ xlab("UBO Hygienic Behavior") + # x axis label
+ theme_minimal(base_size = 17) + # size of the text and label ticks
+ theme(legend.position = "top") + # place the legend at the top
+ scale_color_manual(values = c("darkgrey","darkgreen"), name="Behavior:")# color pallets option = A-H
+
 summary(aov(ds_2022$varroa_load_mites.100.bees~ds_2022$UBO_binary))
 
 # select august course
 August_Data = ds_2022[ds_2022$sampling_event == 9,] # UBO SE7
 
 # varroa load by FK Binary August
-boxplot(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary)
+ggplot(August_Data %>% filter(!is.na(FK_binary)), aes(x=FK_binary, y=varroa_load_mites.100.bees, color=FK_binary, ))+
+  geom_boxplot(size=1) + 
+  ylab("August Varroa Load (mites/ 100 bees)") + # y axis label
+  xlab("FKB Hygienic Behavior") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_manual(values = c("darkseagreen4","darkorange"), name="Behavior:")# color pallets option = A-H
+
 summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$FK_binary))
 
 # varroa load by UBO Binary August
-boxplot(August_Data$varroa_load_mites.100.bees ~ August_Data$UBO_binary_merged)
+ggplot(August_Data %>% filter(!is.na(FK_binary)), aes(x=UBO_binary_merged, y=varroa_load_mites.100.bees, color=UBO_binary_merged))+
+  geom_boxplot(size=1) + 
+  ylab("August Varroa Load (mites/ 100 bees)") + # y axis label
+  xlab("UBO binary") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_manual(values = c("darkseagreen4","darkorange"), name="Behavior:")# color pallets option = A-H
+#geom_text(aes(label=lab_ID)) +
+
 summary(aov(August_Data$varroa_load_mites.100.bees ~ August_Data$UBO_binary_merged))
 
 hist(August_Data$varroa_load_mites.100.bees)
