@@ -37,6 +37,11 @@ ds$anonBeek <- ifelse(ds$beekeeper == "Andrew Munkres", "beekeeper 1",
        ifelse(ds$beekeeper == "Jack Rath", "beekeeper 2", "beekeeper 3"
 ))
 
+# log transform data
+ds$log_june_varroa_load_mites.100.bees <- log10(ds$june_varroa_load_mites.100.bees + 0.0001)
+ds$log_august_varroa_load_mites.100.bees <- log10(ds$august_varroa_load_mites.100.bees + 0.0001)
+
+
 # split the data by beekeeper
 dsSplit <- split(ds, ds$beekeeper)
 
@@ -56,6 +61,12 @@ juneBeek <- ggplot(ds, aes(x=assay_score, y=june_varroa_load_mites.100.bees,
   #geom_text(aes(label=lab_ID)) +
   guides(color = guide_legend(override.aes = list(label = '')))
 juneBeek
+
+dsNo0 <- ds[!ds$june_varroa_load_mites.100.bees==0,]
+boxplot(dsNo0$UBO_binary, dsNo0$june_varroa_load_mites.100.bees)
+x = aov(dsNo0$june_varroa_load_mites.100.bees~dsNo0$UBO_binary)
+summary(x)
+
 
 # june varroa for just andrew by ubo
 cor.test(dsSplit$`Andrew Munkres`$assay_score, dsSplit$`Andrew Munkres`$june_varroa_load_mites.100.bees, method="spearman", exact = F)
@@ -183,6 +194,7 @@ summary(aov(ds$august_varroa_load_mites.100.bees~ds$UBO_binary))
 #################################################################################
 # Nosema Analysis
 #################################################################################
+ds$log_june_nosema_load_spores.bee <- log10(ds$june_nosema_load_spores.bee + 1)
 
 ## UBO by June Nosema load continuous 
 # Add regression lines
@@ -205,13 +217,23 @@ cor.test(dsSplit$`Andrew Munkres`$assay_score, dsSplit$`Andrew Munkres`$june_nos
 
 
 
+## UBO by June Nosema load continuous wit a log transform
+# Add regression lines
+ggplot(ds, aes(x=assay_score, y=log_june_nosema_load_spores.bee, 
+               color=as.character(anonBeek))) +
+  #geom_point(size=0) + 
+  geom_smooth(method=lm, se=FALSE, fullrange=TRUE, size = 2) +
+  geom_point(size=3) +
+  ylab("June Nosema Load (spores/bee)") + # y axis label
+  xlab("Percent Hygienic Behavior") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_manual(values = c("darkturquoise", "tomato3", "grey"), name="Beekeeper:") + # color pallets option = A-H
+  #geom_text(aes(label=lab_ID)) +
+  guides(color = guide_legend(override.aes = list(label = '')))
 
 
-
-
-
-
-summary(lm(dsSplit$`Jack Rath`$june_nosema_load_spores.bee ~ dsSplit$`Jack Rath`$assay_score))
+summary(lm(dsSplit$`Andrew Munkres`$log_june_nosema_load_spores.bee ~ dsSplit$`Andrew Munkres`$assay_score))
 
 # june nosema by ubo
 cor.test(ds$assay_score, ds$june_nosema_load_spores.bee, method="spearman", exact = F)
@@ -222,7 +244,7 @@ boxplot(ds$june_nosema_load_spores.bee~ds$UBO_binary)
 summary(aov(ds$june_nosema_load_spores.bee~ds$UBO_binary))
 
 
-## UBO by August Nosema load continuous 
+ ## UBO by August Nosema load continuous 
 # Add regression lines
 ggplot(ds, aes(x=assay_score, y=august_nosema_load_spores.bee, 
                color=as.character(beekeeper))) +
@@ -259,4 +281,9 @@ ggplot(ds, aes(x=frames_of_brood, y=assay_score,
   scale_color_viridis(discrete = TRUE, option="H", name="Time Point:") + # color pallets option = A-H
   #geom_text(aes(label=lab_ID)) +
   guides(color = guide_legend(override.aes = list(label = '')))
+
+
+
+
+
 
