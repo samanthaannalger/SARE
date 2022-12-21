@@ -1,8 +1,6 @@
 
 # Cornell Pesticide Data Analysis 
 
-setwd("~/GitHub/Pesticide")
-
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
