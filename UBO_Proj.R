@@ -40,7 +40,7 @@ ds$anonBeek <- ifelse(ds$beekeeper == "Andrew Munkres", "beekeeper 1",
 # log transform data
 ds$log_june_varroa_load_mites.100.bees <- log10(ds$june_varroa_load_mites.100.bees + 0.0001)
 ds$log_august_varroa_load_mites.100.bees <- log10(ds$august_varroa_load_mites.100.bees + 0.0001)
-
+ds$log_june_nosema_load_spores.bee <- log10(ds$june_nosema_load_spores.bee + 1)
 
 # split the data by beekeeper
 dsSplit <- split(ds, ds$beekeeper)
@@ -62,6 +62,7 @@ juneBeek <- ggplot(ds, aes(x=assay_score, y=june_varroa_load_mites.100.bees,
   guides(color = guide_legend(override.aes = list(label = '')))
 juneBeek
 
+# discrete analysis
 dsNo0 <- ds[!ds$june_varroa_load_mites.100.bees==0,]
 boxplot(dsNo0$UBO_binary, dsNo0$june_varroa_load_mites.100.bees)
 x = aov(dsNo0$june_varroa_load_mites.100.bees~dsNo0$UBO_binary)
@@ -194,7 +195,7 @@ summary(aov(ds$august_varroa_load_mites.100.bees~ds$UBO_binary))
 #################################################################################
 # Nosema Analysis
 #################################################################################
-ds$log_june_nosema_load_spores.bee <- log10(ds$june_nosema_load_spores.bee + 1)
+
 
 ## UBO by June Nosema load continuous 
 # Add regression lines
@@ -235,13 +236,51 @@ ggplot(ds, aes(x=assay_score, y=log_june_nosema_load_spores.bee,
 
 summary(lm(dsSplit$`Andrew Munkres`$log_june_nosema_load_spores.bee ~ dsSplit$`Andrew Munkres`$assay_score))
 
-# june nosema by ubo
-cor.test(ds$assay_score, ds$june_nosema_load_spores.bee, method="spearman", exact = F)
 
+# remove 0s
+dsNos_no0 <- ds[!ds$june_nosema_load_spores.bee==0,] 
+
+# remove NA
+dsNos_no0 <- dsNos_no0[!is.na(dsNos_no0$june_nosema_load_spores.bee), ]
+dsNos_no0 <- dsNos_no0[!is.na(dsNos_no0$assay_score), ]
+
+
+#glm with gamma distribution
+
+
+
+dsNos_no0$rescaledNosema <- dsNos_no0$june_nosema_load_spores.bee/sum(dsNos_no0$june_nosema_load_spores.bee)
+
+
+mod <- glmer(data = dsNos_no0, rescaledNosema ~ assay_score + beekeeper + (1 | yard), family = "Gamma", 
+             control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun= 100000)),
+              verbose = 1)
+
+
+Anova(mod)
+
+
+
+
+
+
+
+
+
+# june nosema by ubo
+cor.test(ds$assay_score, ds$log_june_nosema_load_spores.bee, method="spearman", exact = F)
+
+
+summary(lm(dsNos_no0$log_june_nosema_load_spores.bee ~ dsNos_no0$assay_score))
+plot(dsNos_no0 $assay_score, dsNos_no0 $log_june_nosema_load_spores.bee)
 
 ## UBO by June Nosema load binary 
-boxplot(ds$june_nosema_load_spores.bee~ds$UBO_binary)
-summary(aov(ds$june_nosema_load_spores.bee~ds$UBO_binary))
+boxplot(dsNos_no0$log_june_nosema_load_spores.bee~dsNos_no0$UBO_binary)
+summary(aov(ds$log_june_nosema_load_spores.bee~ds$UBO_binary))
+
+t.test(ds$june_nosema_load_spores.bee~ds$UBO_binary, alternative="greater")
+
+kruskal.test(ds$june_nosema_load_spores.bee~ds$UBO_binary)
 
 
  ## UBO by August Nosema load continuous 
