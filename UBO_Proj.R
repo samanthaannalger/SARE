@@ -16,6 +16,7 @@ library(viridis)
 library(car)
 library(imputeTS)
 library(cowplot)
+library(scales)
 
 
 # load in data
@@ -34,8 +35,111 @@ mean(ds$UBO_binary, na.rm=T) # get percentage of hygienic UBO
 
 # create anonymous beekeeper names
 ds$anonBeek <- ifelse(ds$beekeeper == "Andrew Munkres", "beekeeper 1",
-       ifelse(ds$beekeeper == "Jack Rath", "beekeeper 2", "beekeeper 3"
-))
+                      ifelse(ds$beekeeper == "Jack Rath", "beekeeper 2", "beekeeper 3"
+                      ))
+
+# create nosema data frame and make long form
+NosemaDS <- select(ds, beekeeper, yard, lab_ID, june_nosema_load_spores.bee, august_nosema_load_spores.bee, UBO_binary, assay_score)
+NosemaDS_long <- gather(NosemaDS, time, nosmea_load, june_nosema_load_spores.bee:august_nosema_load_spores.bee, factor_key=TRUE)
+NosemaDS_long$time <- ifelse(NosemaDS_long$time=="june_nosema_load_spores.bee", "June", "August")
+NosemaDS_long$nosmea_load_log <- log10(NosemaDS_long$nosmea_load + 1)
+NosemaDS_long$nosema_binary <- ifelse(NosemaDS_long$nosmea_load > 0, 1, 0)
+NosemaDS_long$rescaledNosema <- NosemaDS_long$nosmea_load/sum(NosemaDS_long$nosmea_load, na.rm = TRUE)
+
+# remove 0s
+NosemaDS_long_no0 <- NosemaDS_long[!NosemaDS_long$nosema_binary==0,]
+
+
+
+nosePrevSum <- NosemaDS_long %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
+  group_by(time, UBO_binary) %>% # pick variables to group by
+  summarise(
+    
+    mean = mean(nosema_binary, na.rm=T), # mean
+    n = length(nosema_binary),
+    a = sum(nosema_binary, na.rm = T)+1,
+    b = n - a + 1,
+    lower = qbeta(.025, shape1 = a, shape2 = b),
+    upper = qbeta(.975, shape1 = a, shape2 = b),
+    
+  ) 
+
+# add factor data and make ubo a char
+nosePrevSum <- nosePrevSum[!is.na(nosePrevSum$UBO_binary),]
+nosePrevSum$time <- factor(nosePrevSum$time, levels = c("June", "August"))
+nosePrevSum$UBO_Char <- ifelse(nosePrevSum$UBO_binary==1, "UBO Pos.", "UBO Neg.")
+
+# plot prevalence
+nosPrev <- ggplot(nosePrevSum, aes(x=time, y=mean, group=UBO_Char)) +
+  geom_point(aes(color=UBO_Char), size=5)+
+  geom_line(aes(color=UBO_Char), size=1.5) +
+  theme_classic(base_size = 20) +
+  theme(legend.position = c(8,8)) +
+  coord_cartesian(ylim = c(0, 1)) + 
+  geom_errorbar(aes(ymin = lower, ymax = upper, width = 0.1, color=UBO_Char))+
+  labs(x="Sampling Month", y="Nosema Prevalence", color="UBO Status:") +
+  scale_color_manual(values = c("tomato3", "darkturquoise"))
+
+
+
+
+
+
+
+
+nosemaLoad_Sum <- NosemaDS_long_no0 %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
+  group_by(time, UBO_binary) %>% # pick variables to group by
+  summarise(
+    
+    mean = mean(nosmea_load, na.rm=T), # mean\
+    n = length(nosmea_load),
+    sd = sd(nosmea_load, na.rm = TRUE),
+    se = sd / sqrt(n)
+
+) 
+
+# add factor data and make ubo a char
+nosemaLoad_Sum <- nosemaLoad_Sum[!is.na(nosemaLoad_Sum$UBO_binary),]
+nosemaLoad_Sum$time <- factor(nosemaLoad_Sum$time, levels = c("June", "August"))
+nosemaLoad_Sum$UBO_Char <- ifelse(nosemaLoad_Sum$UBO_binary==1, "UBO Pos.", "UBO Neg.")
+
+contNos <-ggplot(nosemaLoad_Sum, aes(x=time, y=mean, group=UBO_Char)) +
+  geom_point(aes(color=UBO_Char), size=5)+
+  geom_line(aes(color=UBO_Char), size=1.5) +
+  theme_classic(base_size = 20) +
+  theme(legend.position = c(.3,.85)) +
+  geom_errorbar(aes(ymin = mean-se, ymax = mean+se, width = 0.1 ,color=UBO_Char))+
+  labs(x="Sampling Date", y="Nosema Load (spores/bee)", color="Pathogen:") +
+  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+                labels = trans_format("log10", math_format(10^.x))) +
+  scale_color_manual(values = c("tomato3", "darkturquoise"))
+
+
+
+
+# make a multi panel plot
+plot_grid(nosPrev, contNos,
+          labels = "AUTO", 
+          label_size = 20)
+
+
+
+
+#glm with gamma distribution rescaled nosema assay score by time
+mod <- glmer(data = NosemaDS_long_no0, rescaledNosema ~ assay_score * time + (1 | yard/beekeeper), family = "Gamma")
+mod1 <- glmer(data = NosemaDS_long, nosema_binary ~ assay_score * time + (1 | yard/beekeeper), family = binomial(link="logit"))
+Anova(mod)
+Anova(mod1)
+
+mod2 <- glmer(data = NosemaDS_long, nosema_binary ~ UBO_binary * time + (1 | yard/beekeeper), family = binomial(link="logit"))
+mod3 <- glmer(data = NosemaDS_long_no0, rescaledNosema ~ UBO_binary * time + (1 | yard/beekeeper), family = "Gamma")
+Anova(mod2)
+Anova(mod3)
+
+
+
+
+
 
 # log transform data
 ds$log_june_varroa_load_mites.100.bees <- log10(ds$june_varroa_load_mites.100.bees + 0.0001)
@@ -245,19 +349,12 @@ dsNos_no0 <- dsNos_no0[!is.na(dsNos_no0$june_nosema_load_spores.bee), ]
 dsNos_no0 <- dsNos_no0[!is.na(dsNos_no0$assay_score), ]
 
 
-#glm with gamma distribution
+
 
 
 
 dsNos_no0$rescaledNosema <- dsNos_no0$june_nosema_load_spores.bee/sum(dsNos_no0$june_nosema_load_spores.bee)
 
-
-mod <- glmer(data = dsNos_no0, rescaledNosema ~ assay_score + beekeeper + (1 | yard), family = "Gamma", 
-             control = glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun= 100000)),
-              verbose = 1)
-
-
-Anova(mod)
 
 
 
