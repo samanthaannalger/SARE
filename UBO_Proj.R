@@ -45,11 +45,13 @@ NosemaDS_long$time <- ifelse(NosemaDS_long$time=="june_nosema_load_spores.bee", 
 NosemaDS_long$nosmea_load_log <- log10(NosemaDS_long$nosmea_load + 1)
 NosemaDS_long$nosema_binary <- ifelse(NosemaDS_long$nosmea_load > 0, 1, 0)
 NosemaDS_long$rescaledNosema <- NosemaDS_long$nosmea_load/sum(NosemaDS_long$nosmea_load, na.rm = TRUE)
+NosemaDS_long$lab_ID <- as.character(NosemaDS_long$lab_ID)
 
 # remove 0s
 NosemaDS_long_no0 <- NosemaDS_long[!NosemaDS_long$nosema_binary==0,]
 
-
+x=NosemaDS_long_no0[NosemaDS_long_no0$time=="August",]
+x[x$UBO_binary==1,]
 
 nosePrevSum <- NosemaDS_long %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
   group_by(time, UBO_binary) %>% # pick variables to group by
@@ -101,27 +103,26 @@ nosemaLoad_Sum <- NosemaDS_long_no0 %>% # operate on the dataframe (ds_2021) and
 # add factor data and make ubo a char
 nosemaLoad_Sum <- nosemaLoad_Sum[!is.na(nosemaLoad_Sum$UBO_binary),]
 nosemaLoad_Sum$time <- factor(nosemaLoad_Sum$time, levels = c("June", "August"))
-nosemaLoad_Sum$UBO_Char <- ifelse(nosemaLoad_Sum$UBO_binary==1, "UBO Pos.", "UBO Neg.")
+nosemaLoad_Sum$UBO_Char <- ifelse(nosemaLoad_Sum$UBO_binary==1, "UBO High", "UBO Low")
 
 contNos <-ggplot(nosemaLoad_Sum, aes(x=time, y=mean, group=UBO_Char)) +
   geom_point(aes(color=UBO_Char), size=5)+
   geom_line(aes(color=UBO_Char), size=1.5) +
   theme_classic(base_size = 20) +
-  theme(legend.position = c(.3,.85)) +
+  theme(legend.position = c(.2,.9)) +
   geom_errorbar(aes(ymin = mean-se, ymax = mean+se, width = 0.1 ,color=UBO_Char))+
-  labs(x="Sampling Date", y="Nosema Load (spores/bee)", color="Pathogen:") +
+  labs(x="Sampling Date", y="Nosema Load (spores/bee)", color=" ") +
   scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   scale_color_manual(values = c("tomato3", "darkturquoise"))
 
-
+contNos
 
 
 # make a multi panel plot
 plot_grid(nosPrev, contNos,
           labels = "AUTO", 
           label_size = 20)
-
 
 
 
