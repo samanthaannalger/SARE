@@ -17,16 +17,14 @@ library(car)
 library(imputeTS)
 library(cowplot)
 library(scales)
+library(ggmosaic)
+
 
 
 # load in data
 #ds <- read.csv("SARE_Field_database2022.csv", header = TRUE, stringsAsFactors = FALSE)
 ds <- read.csv("UBO_Data_2022.csv", header = TRUE, stringsAsFactors = FALSE)
 
-
-#################################################################################
-# UBO Analysis
-#################################################################################
 
 # UBO cont and binary 
 # create binary variable for UBO 
@@ -37,6 +35,13 @@ mean(ds$UBO_binary, na.rm=T) # get percentage of hygienic UBO
 ds$anonBeek <- ifelse(ds$beekeeper == "Andrew Munkres", "beekeeper 1",
                       ifelse(ds$beekeeper == "Jack Rath", "beekeeper 2", "beekeeper 3"
                       ))
+
+
+
+
+#################################################################################
+# NOSEMA Analysis
+#################################################################################
 
 # create nosema data frame and make long form
 NosemaDS <- select(ds, beekeeper, yard, lab_ID, june_nosema_load_spores.bee, august_nosema_load_spores.bee, UBO_binary, assay_score)
@@ -83,12 +88,6 @@ nosPrev <- ggplot(nosePrevSum, aes(x=time, y=mean, group=UBO_Char)) +
   scale_color_manual(values = c("tomato3", "darkturquoise"))
 
 
-
-
-
-
-
-
 nosemaLoad_Sum <- NosemaDS_long_no0 %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
   group_by(time, UBO_binary) %>% # pick variables to group by
   summarise(
@@ -115,7 +114,6 @@ contNos <-ggplot(nosemaLoad_Sum, aes(x=time, y=mean, group=UBO_Char)) +
   scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
                 labels = trans_format("log10", math_format(10^.x))) +
   scale_color_manual(values = c("tomato3", "darkturquoise"))
-
 contNos
 
 
@@ -132,10 +130,159 @@ mod1 <- glmer(data = NosemaDS_long, nosema_binary ~ assay_score * time + (1 | ya
 Anova(mod)
 Anova(mod1)
 
+#glm with gamma distribution rescaled nosema ubo binary by time
 mod2 <- glmer(data = NosemaDS_long, nosema_binary ~ UBO_binary * time + (1 | yard/beekeeper), family = binomial(link="logit"))
 mod3 <- glmer(data = NosemaDS_long_no0, rescaledNosema ~ UBO_binary * time + (1 | yard/beekeeper), family = "Gamma")
 Anova(mod2)
 Anova(mod3)
+
+
+
+
+
+
+#################################################################################
+# VARROA Analysis
+#################################################################################
+
+
+VarroaDS <- select(ds, beekeeper, yard, lab_ID, june_varroa_load_mites.100.bees, august_varroa_load_mites.100.bees, UBO_binary, assay_score)
+VarroaDS_long <- gather(VarroaDS, time, varroa_load, june_varroa_load_mites.100.bees:august_varroa_load_mites.100.bees, factor_key=TRUE)
+VarroaDS_long$time <- ifelse(VarroaDS_long$time=="june_varroa_load_mites.100.bees", "June", "August")
+VarroaDS_long$varroa_binary <- ifelse(VarroaDS_long$varroa_load > 0, 1, 0)
+VarroaDS_long$rescaledVarroa <- VarroaDS_long$varroa_load/sum(VarroaDS_long$varroa_load, na.rm = TRUE)
+VarroaDS_long$lab_ID <- as.character(VarroaDS_long$lab_ID)
+
+
+# remove 0s
+VarroaDS_long_no0 <- VarroaDS_long[!VarroaDS_long$varroa_binary==0,]
+
+
+varroaPrevSum <- VarroaDS_long %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
+  group_by(time, UBO_binary) %>% # pick variables to group by
+  summarise(
+    
+    mean = mean(varroa_binary, na.rm=T), # mean
+    n = length(varroa_binary),
+    a = sum(varroa_binary, na.rm = T)+1,
+    b = n - a + 1,
+    lower = qbeta(.025, shape1 = a, shape2 = b),
+    upper = qbeta(.975, shape1 = a, shape2 = b),
+    
+  ) 
+
+
+# add factor data and make ubo a char
+varroaPrevSum <- varroaPrevSum[!is.na(varroaPrevSum$UBO_binary),]
+varroaPrevSum$time <- factor(varroaPrevSum$time, levels = c("June", "August"))
+varroaPrevSum$UBO_Char <- ifelse(varroaPrevSum$UBO_binary==1, "UBO Pos.", "UBO Neg.")
+
+
+# plot prevalence
+nosPrev <- ggplot(varroaPrevSum, aes(x=time, y=mean, group=UBO_Char)) +
+  geom_point(aes(color=UBO_Char), size=5)+
+  geom_line(aes(color=UBO_Char), size=1.5) +
+  theme_classic(base_size = 20) +
+  theme(legend.position = c(8,8)) +
+  coord_cartesian(ylim = c(0, 1)) + 
+  geom_errorbar(aes(ymin = lower, ymax = upper, width = 0.1, color=UBO_Char))+
+  labs(x="Sampling Month", y="Varroa Prevalence", color="UBO Status:") +
+  scale_color_manual(values = c("tomato3", "darkturquoise"))
+nosPrev
+
+
+
+
+
+varroaLoad_Sum <- VarroaDS_long_no0 %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
+  group_by(time, UBO_binary) %>% # pick variables to group by
+  summarise(
+    
+    mean = mean(varroa_load, na.rm=T), # mean\
+    n = length(varroa_load),
+    sd = sd(varroa_load, na.rm = TRUE),
+    se = sd / sqrt(n)
+    
+  ) 
+
+
+# add factor data and make ubo a char
+varroaLoad_Sum <- varroaLoad_Sum[!is.na(varroaLoad_Sum$UBO_binary),]
+varroaLoad_Sum$time <- factor(varroaLoad_Sum$time, levels = c("June", "August"))
+varroaLoad_Sum$UBO_Char <- ifelse(varroaLoad_Sum$UBO_binary==1, "UBO High", "UBO Low")
+
+varLoad <-ggplot(varroaLoad_Sum, aes(x=time, y=mean, group=UBO_Char)) +
+  geom_point(aes(color=UBO_Char), size=5)+
+  geom_line(aes(color=UBO_Char), size=1.5) +
+  theme_classic(base_size = 20) +
+  theme(legend.position = c(.2,.9)) +
+  geom_errorbar(aes(ymin = mean-se, ymax = mean+se, width = 0.1 ,color=UBO_Char))+
+  labs(x="Sampling Date", y="Varroa Load", color=" ") +
+  scale_color_manual(values = c("tomato3", "darkturquoise"))
+varLoad
+
+
+# make a multi panel plot
+plot_grid(nosPrev, varLoad,
+          labels = "AUTO", 
+          label_size = 20)
+
+
+
+#glm with gamma distribution rescaled nosema assay score by time
+mod <- glmer(data = VarroaDS_long_no0, rescaledVarroa ~ assay_score * time + (1 | yard/beekeeper), family = "Gamma")
+mod1 <- glmer(data = VarroaDS_long, varroa_binary ~ assay_score * time + (1 | yard/beekeeper), family = binomial(link="logit"))
+Anova(mod)
+Anova(mod1)
+
+#glm with gamma distribution rescaled nosema ubo binary by time
+mod2 <- glmer(data = VarroaDS_long, varroa_binary ~ UBO_binary * time + (1 | yard/beekeeper), family = binomial(link="logit"))
+mod3 <- glmer(data = VarroaDS_long_no0, rescaledVarroa ~ UBO_binary * time + (1 | yard/beekeeper), family = "Gamma")
+Anova(mod2)
+Anova(mod3)
+
+
+x=merge(NosemaDS_long, VarroaDS_long)
+chisq.test(x$varroa_binary, x$nosema_binary)
+
+
+x %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
+  group_by(time, varroa_binary) %>% # pick variables to group by
+  summarise(
+    
+    mean = mean(nosema_binary, na.rm=T), # mean
+    n = length(nosema_binary),
+    sd = sd(nosema_binary, na.rm = TRUE),
+    se = sd / sqrt(n)
+    
+  ) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

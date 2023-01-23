@@ -8,7 +8,7 @@ library(ggplot2)
 setwd("~/Documents/GitHub/SARE")
 
 # Read in Tosi Datasets 
-tosi_lethal <- read.csv("pesticide_data_to_merge/Tosi_lethal.csv", header = TRUE, stringsAsFactors = FALSE)
+tosi_lethal <- read.csv("pesticide_data_to_merge/Tosi_lethal.csv", header = TRUE, stringsAsFactors = FALSE) #skip=1
 tosi_sublethal <- read.csv("pesticide_data_to_merge/Tosi_sublethal.csv", header = TRUE, stringsAsFactors = FALSE)
 
 # Read in Description Dataset 
@@ -90,7 +90,7 @@ str(pest_df)
 ################################################################################
 # Cleaning LD50 Dataset -- Tosi Lethal
 ################################################################################
-
+tosi_lethal
 # looking to find the min LD50 value whether it be from contact or acute exposure types 
 # put min value in its own column 
 
@@ -101,7 +101,14 @@ tosi_lethal[tosi_lethal == " "] <- NA
 tosi_lethal[tosi_lethal == ""] <- NA
 
 # adjusting future column names 
-tosi_lethal["X.6"][tosi_lethal["X.6"] == "Min (ug/bee)"] <- "oral_acute_LD50_min"
+
+names(tosi_lethal)[names(tosi_lethal) == 'Min..ug.bee.'] <- 'oral_acute_LD50_min'
+
+
+
+#names(tosi_lethal) <- c("n1", "n2")
+
+tosi_lethal["X.12"][tosi_lethal["X.12"] == "Min (ug/bee)"] <- "oral_acute_LD50_min"
 tosi_lethal["X.13"][tosi_lethal["X.13"] == "LD50 1"] <- "oral_acute_LD50_1"
 tosi_lethal["X.14"][tosi_lethal["X.14"] == "LD50 2"] <- "oral_acute_LD50_2"
 tosi_lethal["X.15"][tosi_lethal["X.15"] == "LD50 3"] <- "oral_acute_LD50_3"
@@ -123,9 +130,9 @@ tosi_lethal <- tosi_lethal[-1,]
 names(tosi_lethal)[names(tosi_lethal) == "Pesticide name"] <- "pesticide_name"
 
 
+
 # find min LD50 value from both oral acute and contact acute values 
-tosi_lethal$min_LD50_value <- min('oral_acute_LD50_min', 
-                                   'oral_acute_LD50_1',
+columns <- c('oral_acute_LD50_min', 'oral_acute_LD50_1',
                                    'oral_acute_LD50_2',
                                    'oral_acute_LD50_3',
                                    'oral_acute_LD50_4',
@@ -135,9 +142,9 @@ tosi_lethal$min_LD50_value <- min('oral_acute_LD50_min',
                                    'contact_acute_LD50_2',
                                    'contact_acute_LD50_3')
 
-              # not printing min value 
-                                   
-view(tosi_lethal)
+
+
+tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(columns))
 
 
 ################################################################################
@@ -147,7 +154,7 @@ view(tosi_lethal)
 view(tosi_sublethal)
 
 # renaming columns 
-names(tosi_sublethal)[names(tosi_sublethal) == "ï..Pesticide.name"] <- "pesticide_name"
+names(tosi_sublethal)[names(tosi_sublethal) == "?..Pesticide.name"] <- "pesticide_name"
 names(tosi_sublethal)[names(tosi_sublethal) == "LOAEL.Unit.measure"] <- "LOAEL_unit_measure"
 names(tosi_sublethal)[names(tosi_sublethal) == "LOAEL.Lowest.sublethal.significant.dose.of.the.publication.per.effect.and.exposure.type..all.Unit.Measures."] <- "LOAEL"
 
