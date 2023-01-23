@@ -82,13 +82,81 @@ pest_df$scale <- ifelse(pest_df$Mass..g. < 1, "small", "large")
 
 str(pest_df)
 
-# Merge Cornell Dataset and Description Dataset 
-#cornell_pesticide_data <- merge(cornell_pesticide_data, pest_Desc, by = pesticide_name)
 
 
 
-# Read in Look-Up Table
-look_up_ds <- read.csv("pestLookUp.csv", header = TRUE, stringsAsFactors = FALSE)
 
-# Read in 2021_Data_Formatted
-formatted_ds <- read.csv("pestFormatted.csv", header = TRUE, stringsAsFactors = FALSE)
+
+################################################################################
+# Cleaning LD50 Dataset -- Tosi Lethal
+################################################################################
+
+# looking to find the min LD50 value whether it be from contact or acute exposure types 
+# put min value in its own column 
+
+view(tosi_lethal)
+
+# convert blank spaces to NA 
+tosi_lethal[tosi_lethal == " "] <- NA
+tosi_lethal[tosi_lethal == ""] <- NA
+
+# adjusting future column names 
+tosi_lethal["X.6"][tosi_lethal["X.6"] == "Min (ug/bee)"] <- "oral_acute_LD50_min"
+tosi_lethal["X.13"][tosi_lethal["X.13"] == "LD50 1"] <- "oral_acute_LD50_1"
+tosi_lethal["X.14"][tosi_lethal["X.14"] == "LD50 2"] <- "oral_acute_LD50_2"
+tosi_lethal["X.15"][tosi_lethal["X.15"] == "LD50 3"] <- "oral_acute_LD50_3"
+tosi_lethal["X.16"][tosi_lethal["X.16"] == "LD50 4"] <- "oral_acute_LD50_4"
+tosi_lethal["X.17"][tosi_lethal["X.17"] == "LD50 5"] <- "oral_acute_LD50_5"
+
+tosi_lethal["X.19"][tosi_lethal["X.19"] == "Min (ug/bee)"] <- "contact_acute_LD50_min"
+tosi_lethal["X.26"][tosi_lethal["X.26"] == "LD50 1"] <- "contact_acute_LD50_1"
+tosi_lethal["X.27"][tosi_lethal["X.27"] == "LD50 2"] <- "contact_acute_LD50_2"
+tosi_lethal["X.28"][tosi_lethal["X.28"] == "LD50 3"] <- "contact_acute_LD50_3"
+
+view(tosi_lethal)
+
+# adjusting header of columns 
+names(tosi_lethal) <- tosi_lethal[1,]
+tosi_lethal <- tosi_lethal[-1,]
+
+# renaming columns 
+names(tosi_lethal)[names(tosi_lethal) == "Pesticide name"] <- "pesticide_name"
+
+
+# find min LD50 value from both oral acute and contact acute values 
+tosi_lethal$min_LD50_value <- min('oral_acute_LD50_min', 
+                                   'oral_acute_LD50_1',
+                                   'oral_acute_LD50_2',
+                                   'oral_acute_LD50_3',
+                                   'oral_acute_LD50_4',
+                                   'oral_acute_LD50_5',
+                                   'contact_acute_Ld50_min', 
+                                   'contact_acute_LD50_1',
+                                   'contact_acute_LD50_2',
+                                   'contact_acute_LD50_3')
+
+              # not printing min value 
+                                   
+view(tosi_lethal)
+
+
+################################################################################
+# Cleaning LOAEL Dataset -- Tosi Sublethal 
+################################################################################
+
+view(tosi_sublethal)
+
+# renaming columns 
+names(tosi_sublethal)[names(tosi_sublethal) == "ï..Pesticide.name"] <- "pesticide_name"
+names(tosi_sublethal)[names(tosi_sublethal) == "LOAEL.Unit.measure"] <- "LOAEL_unit_measure"
+names(tosi_sublethal)[names(tosi_sublethal) == "LOAEL.Lowest.sublethal.significant.dose.of.the.publication.per.effect.and.exposure.type..all.Unit.Measures."] <- "LOAEL"
+
+# if LOAEL_unit_measure does not equal ppb, convert the values of LOAEL to ppb based on the unit measure of LOAEL_unit_measure.
+## ex./ if LOAEL_unit_measure == ppm, then multiply LOAEL by 1000. (output in new column?)
+## but if it is another unit, apply different conversion factor
+
+
+# find the min LOAEL value among LOAELs for each pesticide (pesticide may occur more than once in rows)
+## if possible between bee types (apis vs. anything else)
+
+view(tosi_sublethal)
