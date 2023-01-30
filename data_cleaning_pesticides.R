@@ -7,18 +7,26 @@ library(ggplot2)
 
 setwd("~/Documents/GitHub/SARE")
 
+
+## Reading in datasets 
+
 # Read in Tosi Datasets 
-tosi_lethal <- read.csv("pesticide_data_to_merge/Tosi_lethal.csv", header = TRUE, stringsAsFactors = FALSE) #skip=1
+tosi_lethal <- read.csv("pesticide_data_to_merge/Tosi_lethal.csv", header = TRUE, stringsAsFactors = FALSE, skip = 1)
+
 tosi_sublethal <- read.csv("pesticide_data_to_merge/Tosi_sublethal.csv", header = TRUE, stringsAsFactors = FALSE)
 
 # Read in Description Dataset 
 pest_Desc <- read.csv("pesticide_data_to_merge/pestDesc.csv", header = TRUE, stringsAsFactors = FALSE)
 
 
-# Read in Cornell Dataset !NOTE! - find more general solution to white space/column headers
+# Read in Cornell Results Dataset !NOTE! - find more general solution to white space/column headers
 pest_Results <- read.csv("pesticide_data_to_merge/pesticide_results_2021.csv", header = TRUE, 
                          stringsAsFactors = FALSE, skip = 1)
 
+
+###############################################################################
+# Cleaning Cornell Results Dataset
+###############################################################################
 
 # replace n.d. with NA
 pest_Results[pest_Results == "n.d."] <- NA
@@ -38,9 +46,9 @@ LS_lookup <- pest_Results[LS_row:(LS_row+3),]
 SS_lookup <- pest_Results[SS_row:(SS_row+3),]
 
 
-########################################################################
+#######################################################
 # LIMIT FINDER FUNCTION
-########################################################################
+#######################################################
 limit_finder <- function(df, search, lookup, scale){
   
   # find where samples say <loq
@@ -61,13 +69,9 @@ limit_finder <- function(df, search, lookup, scale){
       df[loqVals$row[i], loqVals$col[i]] <- results[i]
     }
   }
-  
-
-  
   return(df)
 }
 ########################################################################
-
 
 LS_df <- limit_finder(df = LS_df, search = "<LOQ", lookup = LS_lookup)
 SS_df <- limit_finder(df = SS_df, search = "<LOQ", lookup = SS_lookup)
@@ -84,9 +88,6 @@ str(pest_df)
 
 
 
-
-
-
 ################################################################################
 # Cleaning LD50 Dataset -- Tosi Lethal
 ################################################################################
@@ -100,63 +101,38 @@ view(tosi_lethal)
 tosi_lethal[tosi_lethal == " "] <- NA
 tosi_lethal[tosi_lethal == ""] <- NA
 
-# adjusting future column names 
 
-names(tosi_lethal)[names(tosi_lethal) == 'Min..ug.bee.'] <- 'oral_acute_LD50_min'
+# changing column names 
+colnames(tosi_lethal) # original column names
 
+tosi_lethal_colnames <- c("pesticide_name", "other_names","cas", "pesticide_type", "MoA_short", "MoA_classification_site_target", "oral_LD50_geometricmean_ugbee", "oral_source_num","oral_LD50_min", "oralQ1", "oralQ2_median", "oralQ3", "oral_LD50_max", "oral_range", "oral_source_name", "oral_LD50_1", "oral_LD50_2", "oral_LD50_3", "oral_LD50_4", "oral_LD50_5", "contact_LD50_geometricmean_ugbee","contact_source_num","contact_LD50_min", "contactQ1", "contactQ2_median", "contactQ3", "contact_LD50_max","contact_range", "contact_source_name", "contact_LD50_1", "contact_LD50_2","contact_LD50_3")
+  
+colnames(tosi_lethal) <- tosi_lethal_colnames
 
+#colnames(tosi_lethal) # verify new column names
 
-#names(tosi_lethal) <- c("n1", "n2")
-
-tosi_lethal["X.12"][tosi_lethal["X.12"] == "Min (ug/bee)"] <- "oral_acute_LD50_min"
-tosi_lethal["X.13"][tosi_lethal["X.13"] == "LD50 1"] <- "oral_acute_LD50_1"
-tosi_lethal["X.14"][tosi_lethal["X.14"] == "LD50 2"] <- "oral_acute_LD50_2"
-tosi_lethal["X.15"][tosi_lethal["X.15"] == "LD50 3"] <- "oral_acute_LD50_3"
-tosi_lethal["X.16"][tosi_lethal["X.16"] == "LD50 4"] <- "oral_acute_LD50_4"
-tosi_lethal["X.17"][tosi_lethal["X.17"] == "LD50 5"] <- "oral_acute_LD50_5"
-
-tosi_lethal["X.19"][tosi_lethal["X.19"] == "Min (ug/bee)"] <- "contact_acute_LD50_min"
-tosi_lethal["X.26"][tosi_lethal["X.26"] == "LD50 1"] <- "contact_acute_LD50_1"
-tosi_lethal["X.27"][tosi_lethal["X.27"] == "LD50 2"] <- "contact_acute_LD50_2"
-tosi_lethal["X.28"][tosi_lethal["X.28"] == "LD50 3"] <- "contact_acute_LD50_3"
-
-view(tosi_lethal)
-
-# adjusting header of columns 
-names(tosi_lethal) <- tosi_lethal[1,]
-tosi_lethal <- tosi_lethal[-1,]
-
-# renaming columns 
-names(tosi_lethal)[names(tosi_lethal) == "Pesticide name"] <- "pesticide_name"
+# names(tosi_lethal)[names(tosi_lethal) == 'Min..ug.bee.'] <- 'oral_acute_LD50_min'
 
 
+# finding minLD50 value
+tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(oral_LD50_min, oral_LD50_1, oral_LD50_2, oral_LD50_3, oral_LD50_4, oral_LD50_5, contact_LD50_min, contact_LD50_1, contact_LD50_2, contact_LD50_3))
 
-# find min LD50 value from both oral acute and contact acute values 
-columns <- c('oral_acute_LD50_min', 'oral_acute_LD50_1',
-                                   'oral_acute_LD50_2',
-                                   'oral_acute_LD50_3',
-                                   'oral_acute_LD50_4',
-                                   'oral_acute_LD50_5',
-                                   'contact_acute_Ld50_min', 
-                                   'contact_acute_LD50_1',
-                                   'contact_acute_LD50_2',
-                                   'contact_acute_LD50_3')
-
-
-
-tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(columns))
+# view(tosi_lethal)
 
 
 ################################################################################
 # Cleaning LOAEL Dataset -- Tosi Sublethal 
 ################################################################################
 
-view(tosi_sublethal)
+# view(tosi_sublethal)
 
-# renaming columns 
-names(tosi_sublethal)[names(tosi_sublethal) == "?..Pesticide.name"] <- "pesticide_name"
-names(tosi_sublethal)[names(tosi_sublethal) == "LOAEL.Unit.measure"] <- "LOAEL_unit_measure"
-names(tosi_sublethal)[names(tosi_sublethal) == "LOAEL.Lowest.sublethal.significant.dose.of.the.publication.per.effect.and.exposure.type..all.Unit.Measures."] <- "LOAEL"
+colnames(tosi_sublethal)
+
+tosi_sublethal_colnames <- c("pesticide_name", "cas", "pesticide_type", "MoA_short", "MoA_classification_site_taret", "survey_inclusion_name", "screened_in_survey", "num_survery_screenings", "oral_LD50_geometricmean_ugbee", "oral_source_name", "contact_LD50_geometricmean_ugbee", "contact_source_name", "LOAEL_allunits", "LOAEL_unit_measure", "LOAEL_ug/bee/day", "LOAEL_category_ug/bee", "SubTR_LOAEL/LD50", "SubTR_category", "exposure_type_oral_v_contact", "exposure_type_acute_v_chronic", "exposure_duration_h", "time_after_exposure_of_significant_effect_h", "feedtype_main_category", "feedtype_subcategory", "feedtype_concentration", "bee_type", "bee_genus", "bee_species", "bee_species_details", "sublethal_effect_main_category", "sublethal_effect_subcategory", "sublethal_effect_details", "original_ref", "ref_year", "review_ref")
+
+colnames(tosi_sublethal) <- tosi_sublethal_colnames
+
+# colnames(tosi_sublethal) # verify new column names
 
 # if LOAEL_unit_measure does not equal ppb, convert the values of LOAEL to ppb based on the unit measure of LOAEL_unit_measure.
 ## ex./ if LOAEL_unit_measure == ppm, then multiply LOAEL by 1000. (output in new column?)
@@ -166,4 +142,3 @@ names(tosi_sublethal)[names(tosi_sublethal) == "LOAEL.Lowest.sublethal.significa
 # find the min LOAEL value among LOAELs for each pesticide (pesticide may occur more than once in rows)
 ## if possible between bee types (apis vs. anything else)
 
-view(tosi_sublethal)
