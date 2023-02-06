@@ -356,6 +356,15 @@ summary(mod)
 fisher.test(y = ds_2022$FK_binary, x = ds_2022$treatment_grp)
 fisher.test(y = ds_2022$UBO_binary, x = ds_2022$treatment_grp)
 
+# differences in varroa load between selction processes
+ggplot(ds_2022, aes(x=treatment_grp, y=varroa_load_mites.100.bees, color=treatment_grp)) +
+  geom_boxplot(size=1) +
+  ylab("Varroa Load") + # y axis label
+  xlab("Treatment Group") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_manual(values = c("darkseagreen4","darkorange"), name="Treatment Group:")
+
 # varroa load by group FHA vs NPQ (ANOVA)
 mod <- aov(ds_2022$varroa_load_mites.100.bees ~ ds_2022$treatment_grp)
 summary(mod)
