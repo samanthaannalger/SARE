@@ -71,7 +71,7 @@ limit_finder <- function(df, search, lookup, scale){
   }
   return(df)
 }
-########################################################################
+#######################################################
 
 LS_df <- limit_finder(df = LS_df, search = "<LOQ", lookup = LS_lookup)
 SS_df <- limit_finder(df = SS_df, search = "<LOQ", lookup = SS_lookup)
@@ -86,6 +86,7 @@ pest_df$scale <- ifelse(pest_df$Mass..g. < 1, "small", "large")
 
 str(pest_df)
 
+view(pest_df)
 
 
 ################################################################################
@@ -111,11 +112,9 @@ colnames(tosi_lethal) <- tosi_lethal_colnames
 
 #colnames(tosi_lethal) # verify new column names
 
-# names(tosi_lethal)[names(tosi_lethal) == 'Min..ug.bee.'] <- 'oral_acute_LD50_min'
-
-
 # finding minLD50 value
 tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(oral_LD50_min, oral_LD50_1, oral_LD50_2, oral_LD50_3, oral_LD50_4, oral_LD50_5, contact_LD50_min, contact_LD50_1, contact_LD50_2, contact_LD50_3))
+# !NOTE! not sure if this is working 
 
 # view(tosi_lethal)
 
@@ -124,7 +123,7 @@ tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(oral_LD50_min, oral_LD
 # Cleaning LOAEL Dataset -- Tosi Sublethal 
 ################################################################################
 
-# view(tosi_sublethal)
+view(tosi_sublethal)
 
 colnames(tosi_sublethal)
 
@@ -134,10 +133,43 @@ colnames(tosi_sublethal) <- tosi_sublethal_colnames
 
 # colnames(tosi_sublethal) # verify new column names
 
+tosi_sublethal[tosi_sublethal == " "] <- NA
+tosi_sublethal[tosi_sublethal == ""] <- NA
+
 # if LOAEL_unit_measure does not equal ppb, convert the values of LOAEL to ppb based on the unit measure of LOAEL_unit_measure.
 ## ex./ if LOAEL_unit_measure == ppm, then multiply LOAEL by 1000. (output in new column?)
 ## but if it is another unit, apply different conversion factor
 
+tosi_sublethal$LOAEL_unit_measure <- as.character(tosi_sublethal$LOAEL_unit_measure)
+
+str(tosi_sublethal$LOAEL_unit_measure)
+which(table(tosi_sublethal$LOAEL_unit_measure)>=1)
+
+# could unit measures be put into a function for conversion to ppb? 
+tosi_sublethal_unit_measures <- c("µg/bee", "µM", "g/bee/week", "g/ha", "g/hive", "g/hm-2", "gals/acre", "μg", "μg/bee", 
+                                  "μg/bee/day", "μg/larva", "μL", "μL/bee", "μM", "kg/ha", "MFR", "mL/bee", "mL/colony", 
+                                  "mM", "mm3 /bee", "ng/L", "ng/ml", "nM", "nmol/bee", "nmol/day/bee", "ppb", "ppm", "unclear")
+
+# tosi_sublethal %>% 
+ #  select(LOAEL_unit_measure, LOAEL_allunits) %>% 
+#  mutate(LOAEL_calculated = LOAEL_allunits * 1000)
+  
+#  if (LOAEL_unit_measure == "ppb") {
+#    mutate(LOAEL_calculated == LOAEL_allunits * 1000)
+#    } else {(LOAEL_calculated == "")
+#    }
+
+
+tosi_sublethal$LOAEL_calculated <- 
+  if(LOAEL_unit_measure = "ppm") {
+    mutate(tosi_sublethal$LOAEL_allunits * 1000)
+  } 
+elseif (LOAEL_unit_measure = "other unit measure") {
+  mutate(tosi_sublethal$LOAEL_allunits * x conversion factor)
+}
+elseif (LOAEL_unit_measure = "ppb"){#no change
+}
+view(tosi_sublethal)
 
 # find the min LOAEL value among LOAELs for each pesticide (pesticide may occur more than once in rows)
 ## if possible between bee types (apis vs. anything else)
