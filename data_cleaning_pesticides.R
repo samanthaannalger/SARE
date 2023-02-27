@@ -159,7 +159,7 @@ tosi_sublethal_unit_measures <- c("µg/bee", "µM", "g/bee/week", "g/ha", "g/hiv
 #  mutate(LOAEL_calculated = LOAEL_allunits * 1000)
   
 #  if (LOAEL_unit_measure == "ppb") {
-#    mutate(LOAEL_calculated == LOAEL_allunits * 1000)
+#    mutate(LOAEL_calculated == LOAEL_allunits * 1000) 
 #    } else {(LOAEL_calculated == "")
 #    }
 
@@ -168,7 +168,7 @@ tosi_sublethal$LOAEL_calculated <-
   if(LOAEL_unit_measure = "ppm") {
     mutate(tosi_sublethal$LOAEL_allunits * 1000)
   } 
-elseif (LOAEL_unit_measure = "other unit measure") {
+else if (LOAEL_unit_measure = "other unit measure") {
   mutate(tosi_sublethal$LOAEL_allunits * x conversion factor)
 }
 elseif (LOAEL_unit_measure = "ppb"){#no change
