@@ -10,6 +10,9 @@ setwd("~/Documents/GitHub/SARE")
 
 ## Reading in datasets 
 
+# read in pesticide descriptions
+pest_descriptions <- read.csv("pesticide_data_to_merge/pestDesc.csv", header = TRUE, stringsAsFactors = FALSE)
+
 # Read in Tosi Datasets 
 tosi_lethal <- read.csv("pesticide_data_to_merge/Tosi_lethal.csv", header = TRUE, stringsAsFactors = FALSE, skip = 1)
 
@@ -96,7 +99,7 @@ tosi_lethal
 # looking to find the min LD50 value whether it be from contact or acute exposure types 
 # put min value in its own column 
 
-view(tosi_lethal)
+#view(tosi_lethal)
 
 # convert blank spaces to NA 
 tosi_lethal[tosi_lethal == " "] <- NA
@@ -111,14 +114,12 @@ tosi_lethal_colnames <- c("pesticide_name", "other_names","cas", "pesticide_type
 colnames(tosi_lethal) <- tosi_lethal_colnames
 
 
-# finding minLD50 value
-# !NOTE! not sure if this is working ALEX NOTE: saving it to a variable and adding na.rm = T makes it work. Introduces Inf for all na values. making them NA in the next line
+# finding minLD50 value - all units are ug/bee
+# NOTE: Transform to PPB
 tl <- tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(oral_LD50_min, oral_LD50_1, oral_LD50_2, oral_LD50_3, oral_LD50_4, oral_LD50_5, contact_LD50_min, contact_LD50_1, contact_LD50_2, contact_LD50_3, na.rm = TRUE))
 
 # remove Inf values
 tl$min_LD50_value <- ifelse(tl$min_LD50_value == "Inf", NA, tl$min_LD50_value)
-
-
 
 
 # remove rows with NA for LD50
@@ -133,7 +134,7 @@ TL_simplified <- tosi_lethal_noNA %>%
   ) 
 
 # unlike Tosi sublethal data, this dataset does not distinguish by publications or bee type 
-view(TL_simplified)
+#view(TL_simplified)
 
 
 
@@ -141,7 +142,7 @@ view(TL_simplified)
 # Cleaning LOAEL Dataset -- Tosi Sublethal 
 ################################################################################
 
-view(tosi_sublethal)
+#view(tosi_sublethal)
 
 colnames(tosi_sublethal)
 
@@ -181,7 +182,9 @@ tosi_sublethal_noNA$bee_genus_simple <- ifelse(tosi_sublethal_noNA$bee_genus == 
   tosi_sublethal_noNA$bee_genus == "Bombus", "Bumblebee", "Other")
 )
 
-
+# TO DO: convert to PPB
+# LOAEL: Lowest Observed Adverse effect level
+# N studies found sublethal impacts of this chemical on beeGenera. The lowest concentration accross studies is X
 # summarize for each chemical - min value fro LOAEL - block by bee type and sum number of pubs
 TS_simplified <- tosi_sublethal_noNA %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
   group_by(pesticide_name, bee_genus_simple) %>% # pick variables to group by
@@ -192,10 +195,7 @@ TS_simplified <- tosi_sublethal_noNA %>% # operate on the dataframe (ds_2021) an
     
   ) 
 
-View(TS_simplified)
-
-
-
+View (TS_simplified)
 
 
 
