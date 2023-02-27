@@ -116,7 +116,24 @@ colnames(tosi_lethal) <- tosi_lethal_colnames
 tl <- tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(oral_LD50_min, oral_LD50_1, oral_LD50_2, oral_LD50_3, oral_LD50_4, oral_LD50_5, contact_LD50_min, contact_LD50_1, contact_LD50_2, contact_LD50_3, na.rm = TRUE))
 
 # remove Inf values
-tl$min_LD50_value <- ifelse(tl$min_LD50_value == "Inf", NA, tl$min_LD50_value) 
+tl$min_LD50_value <- ifelse(tl$min_LD50_value == "Inf", NA, tl$min_LD50_value)
+
+
+
+
+# remove rows with NA for LD50
+tosi_lethal_noNA <- tl[!is.na(tl$min_LD50_value), ]
+
+# summarize for each chemical 
+TL_simplified <- tosi_lethal_noNA %>% 
+  group_by(pesticide_name) %>% # pick variables to group by
+  summarise(
+    
+    min_LD50_value = min(min_LD50_value, na.rm=T), 
+  ) 
+
+# unlike Tosi sublethal data, this dataset does not distinguish by publications or bee type 
+view(TL_simplified)
 
 
 
@@ -152,6 +169,7 @@ tosi_sublethal_unit_measures <- c("µg/bee", "µM", "g/bee/week", "g/ha", "g/hiv
                                   "μg/bee/day", "μg/larva", "μL", "μL/bee", "μM", "kg/ha", "MFR", "mL/bee", "mL/colony", 
                                   "mM", "mm3 /bee", "ng/L", "ng/ml", "nM", "nmol/bee", "nmol/day/bee", "ppb", "ppm", "unclear")
 
+
 tosi_sublethal$LOAEL_ug_per_bee <- tosi_sublethal$`LOAEL_ug/bee/day`
 
 # remove rows with NA for LOAEL
@@ -173,9 +191,6 @@ TS_simplified <- tosi_sublethal_noNA %>% # operate on the dataframe (ds_2021) an
     numPubs = length(original_ref),
     
   ) 
-
-s
-
 
 View(TS_simplified)
 
