@@ -110,7 +110,6 @@ tosi_lethal_colnames <- c("pesticide_name", "other_names","cas", "pesticide_type
   
 colnames(tosi_lethal) <- tosi_lethal_colnames
 
-# colnames(tosi_lethal) # verify new column names
 
 # finding minLD50 value
 # !NOTE! not sure if this is working ALEX NOTE: saving it to a variable and adding na.rm = T makes it work. Introduces Inf for all na values. making them NA in the next line
@@ -119,8 +118,6 @@ tl <- tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(oral_LD50_min, o
 # remove Inf values
 tl$min_LD50_value <- ifelse(tl$min_LD50_value == "Inf", NA, tl$min_LD50_value) 
 
-
-# view(tosi_lethal)
 
 
 ################################################################################
@@ -149,10 +146,57 @@ tosi_sublethal$LOAEL_unit_measure <- as.character(tosi_sublethal$LOAEL_unit_meas
 str(tosi_sublethal$LOAEL_unit_measure)
 which(table(tosi_sublethal$LOAEL_unit_measure)>=1)
 
+
 # could unit measures be put into a function for conversion to ppb? 
 tosi_sublethal_unit_measures <- c("µg/bee", "µM", "g/bee/week", "g/ha", "g/hive", "g/hm-2", "gals/acre", "μg", "μg/bee", 
                                   "μg/bee/day", "μg/larva", "μL", "μL/bee", "μM", "kg/ha", "MFR", "mL/bee", "mL/colony", 
                                   "mM", "mm3 /bee", "ng/L", "ng/ml", "nM", "nmol/bee", "nmol/day/bee", "ppb", "ppm", "unclear")
+
+tosi_sublethal$LOAEL_ug_per_bee <- tosi_sublethal$`LOAEL_ug/bee/day`
+
+# remove rows with NA for LOAEL
+tosi_sublethal_noNA <- tosi_sublethal[!is.na(tosi_sublethal$LOAEL_ug_per_bee), ]
+
+
+# make variable of bee genus simplified
+tosi_sublethal_noNA$bee_genus_simple <- ifelse(tosi_sublethal_noNA$bee_genus == "Apis", "Honeybee", ifelse(
+  tosi_sublethal_noNA$bee_genus == "Bombus", "Bumblebee", "Other")
+)
+
+
+# summarize for each chemical - min value fro LOAEL - block by bee type and sum number of pubs
+TS_simplified <- tosi_sublethal_noNA %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
+  group_by(pesticide_name, bee_genus_simple) %>% # pick variables to group by
+  summarise(
+    
+    min_LOAEL_ug_per_bee = min(LOAEL_ug_per_bee, na.rm=T), # mean
+    numPubs = length(original_ref),
+    
+  ) 
+
+s
+
+
+View(TS_simplified)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # tosi_sublethal %>% 
  #  select(LOAEL_unit_measure, LOAEL_allunits) %>% 
@@ -164,16 +208,16 @@ tosi_sublethal_unit_measures <- c("µg/bee", "µM", "g/bee/week", "g/ha", "g/hiv
 #    }
 
 
-tosi_sublethal$LOAEL_calculated <- 
-  if(LOAEL_unit_measure = "ppm") {
-    mutate(tosi_sublethal$LOAEL_allunits * 1000)
-  } 
-else if (LOAEL_unit_measure = "other unit measure") {
-  mutate(tosi_sublethal$LOAEL_allunits * x conversion factor)
-}
-elseif (LOAEL_unit_measure = "ppb"){#no change
-}
-view(tosi_sublethal)
+#tosi_sublethal$LOAEL_calculated <- 
+#  if(LOAEL_unit_measure = "ppm") {
+#    mutate(tosi_sublethal$LOAEL_allunits * 1000)
+#  } 
+#else if (LOAEL_unit_measure = "other unit measure") {
+#  mutate(tosi_sublethal$LOAEL_allunits * x conversion factor)
+#}
+#elseif (LOAEL_unit_measure = "ppb"){#no change
+#}
+#view(tosi_sublethal)
 
 # find the min LOAEL value among LOAELs for each pesticide (pesticide may occur more than once in rows)
 ## if possible between bee types (apis vs. anything else)
