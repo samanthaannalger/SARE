@@ -110,11 +110,15 @@ tosi_lethal_colnames <- c("pesticide_name", "other_names","cas", "pesticide_type
   
 colnames(tosi_lethal) <- tosi_lethal_colnames
 
-#colnames(tosi_lethal) # verify new column names
+# colnames(tosi_lethal) # verify new column names
 
 # finding minLD50 value
-tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(oral_LD50_min, oral_LD50_1, oral_LD50_2, oral_LD50_3, oral_LD50_4, oral_LD50_5, contact_LD50_min, contact_LD50_1, contact_LD50_2, contact_LD50_3))
-# !NOTE! not sure if this is working 
+# !NOTE! not sure if this is working ALEX NOTE: saving it to a variable and adding na.rm = T makes it work. Introduces Inf for all na values. making them NA in the next line
+tl <- tosi_lethal %>% rowwise() %>% mutate(min_LD50_value = min(oral_LD50_min, oral_LD50_1, oral_LD50_2, oral_LD50_3, oral_LD50_4, oral_LD50_5, contact_LD50_min, contact_LD50_1, contact_LD50_2, contact_LD50_3, na.rm = TRUE))
+
+# remove Inf values
+tl$min_LD50_value <- ifelse(tl$min_LD50_value == "Inf", NA, tl$min_LD50_value) 
+
 
 # view(tosi_lethal)
 
