@@ -13,6 +13,9 @@ setwd("~/Documents/GitHub/SARE")
 # read in pesticide descriptions
 pest_descriptions <- read.csv("pesticide_data_to_merge/pestDesc.csv", header = TRUE, stringsAsFactors = FALSE)
 
+# Read in additional description information (from Colin)
+pest_Desc_additionalinfo <- read.csv("pesticide_data_to_merge/pestDesc_additioninfo.csv", header = TRUE, stringsAsFactors = FALSE)
+
 # Read in Tosi Datasets 
 tosi_lethal <- read.csv("pesticide_data_to_merge/Tosi_lethal.csv", header = TRUE, stringsAsFactors = FALSE, skip = 1)
 
@@ -89,7 +92,7 @@ pest_df$scale <- ifelse(pest_df$Mass..g. < 1, "small", "large")
 
 str(pest_df)
 
-view(pest_df)
+# view(pest_df)
 
 
 ################################################################################
@@ -134,7 +137,8 @@ TL_simplified <- tosi_lethal_noNA %>%
   ) 
 
 # unlike Tosi sublethal data, this dataset does not distinguish by publications or bee type 
-#view(TL_simplified)
+
+# view(TL_simplified)
 
 
 
@@ -195,19 +199,43 @@ TS_simplified <- tosi_sublethal_noNA %>% # operate on the dataframe (ds_2021) an
     
   ) 
 
-View (TS_simplified)
+# TS_simplified
 
 
 
+############################ 
+# Cleaning Pest_Desc Dataset
+############################
+# pest_Desc
+# changing column names 
+colnames(pest_Desc) # original column names 
+
+pest_Desc_colnames <- c("pesticide_name", "description", "pesticide_type")
+
+colnames(pest_Desc) <- pest_Desc_colnames
+
+# colnames(pest_Desc) # verify new column names
+
+# eliminating rows with redundant values from transition to csv 
+pest_Desc <- subset(pest_Desc, pest_Desc$pesticide_name != "Pesticide") 
+
+# Merging in pest_Desc_additionalinfo to pest_Desc, creating pest_Desc_combined
+pest_Desc_combined <- merge(pest_Desc, pest_Desc_additionalinfo, by = "pesticide_name", all.x = TRUE)
+view(pest_Desc_combined)
 
 
 
+##############
+# Merging Data 
+##############
 
+tosi_combined <- merge(TL_simplified, TS_simplified, by = "pesticide_name", all.x = TRUE)
+#view(tosi_combined)
 
+tosiDesc_combined <- merge(tosi_combined, pest_Desc_combined, by = "pesticide_name", all.x = TRUE)
+#view(tosiDesc_combined)
 
-
-
-
+# eventually would like to merge tosiDesc_combined with pest_df (Cornell data). Cornell data is also arranged differently. transpose? 
 
 
 
