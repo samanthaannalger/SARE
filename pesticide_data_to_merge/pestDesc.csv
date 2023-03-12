@@ -1,5 +1,4 @@
-﻿Table 3:  Pesticide Description,,
-Pesticide,Description,Type
+﻿pesticide_name,Description,Type
 Azoxystrobin,"An experimental compound used on cereals, vegetables, fruit crops, peanuts, turf, ornamentals, stone fruit, bananas, rice, apples, grapes, and potatoes. This chemical does not leach and is unlikely to contaminate water bodies. It is found to exhibit very low ecological risks to
 aquatic life, birds, and mammals. Other names include Abound, Amistar, Bankit, Heritage, and Quadris.",Fungicide
 Boscalid,"Fungicide used on specialty crops such as strawberries, beans, stone fruit, tree nuts, root vegetables, carrots, grapes, Brassica vegetables, and sunflowers (http://www.epa.gov/opp00001/chem_search/reg_actions/registration/fs_PC-128008_01-Jul-03.pdf).",Fungicide
