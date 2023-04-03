@@ -10,25 +10,26 @@ setwd("~/Documents/GitHub/SARE")
 
 ## Reading in datasets 
 
-# read in pesticide descriptions
-pest_descriptions <- read.csv("pesticide_data_to_merge/pestDesc.csv", header = TRUE, stringsAsFactors = FALSE)
 
-# Read in additional description information (from Colin)
-pest_Desc_additionalinfo <- read.csv("pesticide_data_to_merge/pestDesc_additioninfo.csv", header = TRUE, stringsAsFactors = FALSE)
-
+# Read in Cornell Results Dataset !NOTE! - find more general solution to white space/column headers
+pest_Results <- read.csv("pesticide_data_to_merge/pesticide_results_2021.csv", header = TRUE, 
+                         stringsAsFactors = FALSE, skip = 1)
 # Read in Tosi Datasets 
 tosi_lethal <- read.csv("pesticide_data_to_merge/Tosi_lethal.csv", header = TRUE, stringsAsFactors = FALSE, skip = 1)
 
 tosi_sublethal <- read.csv("pesticide_data_to_merge/Tosi_sublethal.csv", header = TRUE, stringsAsFactors = FALSE)
 
-# Read in Description Dataset 
+# read in pesticide descriptions
+# pest_descriptions <- read.csv("pesticide_data_to_merge/pestDesc.csv", header = TRUE, stringsAsFactors = FALSE) #seeemed redundant and unused in code
+
+# Read in Description Dataset (NHBS descriptions)
 pest_Desc <- read.csv("pesticide_data_to_merge/pestDesc.csv", header = TRUE, stringsAsFactors = FALSE)
 
+# Read in additional description information (classification info in Google Sheet from Colin)
+pest_Desc_additionalinfo <- read.csv("pesticide_data_to_merge/pestDesc_additioninfo.csv", header = TRUE, stringsAsFactors = FALSE)
 
-# Read in Cornell Results Dataset !NOTE! - find more general solution to white space/column headers
-pest_Results <- read.csv("pesticide_data_to_merge/pesticide_results_2021.csv", header = TRUE, 
-                         stringsAsFactors = FALSE, skip = 1)
-
+# Read in updated description information - Colin 
+pest_Desc_updated <- read.csv("pesticide_data_to_merge/updated_descriptions_4-1-23.csv")
 
 ###############################################################################
 # Cleaning Cornell Results Dataset
@@ -203,9 +204,9 @@ TS_simplified <- tosi_sublethal_noNA %>% # operate on the dataframe (ds_2021) an
 
 
 
-############################ 
-# Cleaning Pest_Desc Dataset
-############################
+################################################
+# Cleaning Pest_Desc Dataset (NHBS descriptions)
+################################################
 # pest_Desc
 # changing column names 
 colnames(pest_Desc) # original column names 
@@ -219,24 +220,45 @@ colnames(pest_Desc) <- pest_Desc_colnames
 # eliminating rows with redundant values from transition to csv 
 pest_Desc <- subset(pest_Desc, pest_Desc$pesticide_name != "Pesticide") 
 
-# Merging in pest_Desc_additionalinfo to pest_Desc, creating pest_Desc_combined
-pest_Desc_combined <- merge(pest_Desc, pest_Desc_additionalinfo, by = "pesticide_name", all.x = TRUE)
-view(pest_Desc_combined)
+
+#################################################
+# Cleaning pest_Desc_updated (Colin descriptions)
+#################################################
+
+pest_Desc_updated[pest_Desc_updated == " "] <- NA
+pest_Desc_updated[pest_Desc_updated == ""] <- NA
+
+
+##################
+# Merging Datasets 
+##################
+
+## 1st description dataset merge 
+# Merging pest_Desc_additionalinfo to pest_Desc, creating pest_Desc_combined
+pest_Desc_combined <- merge(y = pest_Desc, x = pest_Desc_additionalinfo, by = "pesticide_name", all = TRUE)
+# view(pest_Desc_combined)
+
+##2nd description dataset merge 
+# Merging pest_Desc_updated into pest_Desc_combined
+pest_Desc_combined <- merge(y = pest_Desc_combined, x = pest_Desc_updated , by = "pesticide_name", all = TRUE)
+#view(pest_Desc_combined)
+
+
+## if other_pesticide_name in pest_Desc_combined == pesticide_name, delete row pertaining to the other pesticide name 
 
 
 
-##############
-# Merging Data 
-##############
+# Merging Tosi Datasets 
+tosi_combined <- merge(TL_simplified, TS_simplified, by = "pesticide_name", all = TRUE)
+view(tosi_combined)
 
-tosi_combined <- merge(TL_simplified, TS_simplified, by = "pesticide_name", all.x = TRUE)
-#view(tosi_combined)
+# Merging Tosi combined dataset with the combined pesticide description dataset 
+tosiDesc_combined <- merge(tosi_combined, pest_Desc_combined, by = "pesticide_name", all = TRUE)
+view(tosiDesc_combined)
 
-tosiDesc_combined <- merge(tosi_combined, pest_Desc_combined, by = "pesticide_name", all.x = TRUE)
-#view(tosiDesc_combined)
+
 
 # eventually would like to merge tosiDesc_combined with pest_df (Cornell data). Cornell data is also arranged differently. transpose? 
-
 
 
 
