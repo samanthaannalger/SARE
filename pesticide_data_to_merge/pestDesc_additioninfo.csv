@@ -1,0 +1,95 @@
+pesticide_name,pesticide_type,mode_of_action,primary_site_of_action,chemical_class,moa_classification,bee_toxicant
+"2,4-DMPF",Insecticide,Nerve & Muscle,Octopamine receptor agonists,Formamidine,IRAC 19 ,Not Listed
+4-Hydroxy-chlorothalonil,Fungicide,Unspecified,Unspecified,Chloronitriles,FRAC M,Not Listed
+Acephate,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Organophosphates,IRAC 1B,Yes
+Acetamiprid,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Competitive Modulators,Neonicotinoids,IRAC 4A,Not Listed
+Ametryn,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Triazine,HRAC 5,Not Listed
+Atrazine,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Triazine,HRAC 5,Not Listed
+Avermectin B1a,Insecticide,Nerve & Muscle,Glutamate-Gated Chloride Chanel (GLUCL) Allosteric Modulators,"Avermectins, Milbenmycins",IRAC 6,Yes
+Azoxystrobin,Fungicide,Respiration,Complex III ubiquinol oxidase at cyt b gene,Methoxy-acrylate,FRAC C3,Not Listed
+Bendiocarb,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Carbamates,IRAC 1A,Yes
+Boscalid,Fungicide,Respiration,Complex II Succinate-dehydrogenase,Pyridine-Carboxamide,FRAC C2,Not Listed
+Bromuconazole,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Carbaryl,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Carbamates,IRAC 1A,Yes
+Carbofuran,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Carbamates,IRAC 1A,Yes
+Chlorantraniliprole,Insecticide,Unkown,Ryanodine Receptor Modulator,Diamides,IRAC 28,Not Listed
+Chlorpyrifos,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Organophosphates,IRAC 1B,Yes
+Clomazone,Herbicide,Light Activation of ROS^a,Inhibition of Deoxy-D-Xylulose Phosphate Synthesis,Isoxazolidinone,HRAC 13,Not Listed
+Clothianidin,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Competitive Modulators,Neonicotinoids,IRAC 4A,Yes
+Coumaphos,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Organophosphates,IRAC 1B,Moderately Toxic
+Cyanazine,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Triazine,HRAC 5,Not Listed
+Cyantraniliprole,Insecticide,Unknown,Ryanodine Receptor Modulators,Diamides,IRAC 28,Not Listed
+Cyflufenamid,Fungicide,Unknown,Unknown,phenyl acetimide,Unclassified,Not Listed
+Cyprodinil,Fungicide,Amino Acid and Protein Synthesis,Methionine Biosynthesis,Pyrimidine,FRAC D1,Not Listed
+Cyromazine,"Insect Growth Regulator, Insecticide",Growth,"Dipteran, Moulting Disruptor",Cryomazine,IRAC 17,Not Listed
+Difenoconazole,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Diflubenzuron,Insect Growth Regulator,Growth,Inhibitors of Chitin Biosynthesis Affecting CHS1,Benzoylureas,IRAC 15,Not Listed
+Dimoxystrobin,Fungicide,Respiration,Complex III ubiquinol oxidase at cyt b gene,oximino-acetamide,FRAC C3,Not Listed
+Dinotefuran,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Competitive Modulators,Neonicotinoids,IRAC 4A,Yes
+Diuron,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Urea,HRAC 5,Not Listed
+Fenamidone,Fungicide,Respiration,Complex III ubiquinol oxidase at cyt b gene,Imidazolinone,FRAC C3,Not Listed
+Fenbuconazole,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Fenhexamid,Fungicide,Sterol Biosynthesis in Membranes,Keto-reductase in C4-de-methylation,Hydroxyanilide,FRAC G3,Not Listed
+Fenpyroximate,Inescticide,Respiration,Mitochondrial Complex I Electron Transport Inhibitors,Meti Acaricides and Insecticides,IRAC 21A,Not Listed
+Fipronil,Insecticide,Nerve & Muscle,GABA-Gated Chloride Channel Blockers,Phenylpyrazoles (Fiproles),IRAC 2A,Yes
+Fluazifop,Herbicide,Cellular Metabolism,Inhibition of Acetyl CoA Carboxylase,Aryloxyphenoxy-propionate,HRAC 1,Not Listed
+Fluazinam,Fungicide,Respiration,Uncouplers of Oxidative Phosphorylation,"2,6-dinitro-aniline",FRAC C5,Not Listed
+Fludioxonil,Fungicide,Signal Transduction,Osmotic Signal Transduction,Pyrrole,FRAC E2,Not Listed
+Flufenacet,Herbicide,Cellular Metabolism,Inhibition of Very Long-Chain Fatty Acid Synthesis,a-Oxyacetamide,IRAC 15,Not Listed
+Flumioxazin,Herbicide,Light Activation of ROS^a,Inhibition of Protoporphyrinogen Oxidase,N-Phenyl-Imide,HRAC 14,Not Listed
+Fluometuron,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Urea,HRAC 5,Not Listed
+Fluopicolide,Fungicide,Respiration,Delocalisation of Spectrin-like Proteins,Pyridinylmethyl Benzamide,FRAC B1,Not Listed
+Fluopyram,Fungicide,Respiration,Complex II Succinate-dehydrogenase,pyridine-ethyl-benzamide,FRAC C2,Not Listed
+Fluoxastrobin,Fungicide,Respiration,Complex III ubiquinol oxidase at cyt b gene,dihydro-dioxazine,FRAC C3,Not Listed
+Flupyradifurone,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Competitive Modulators,Butenolides,IRAC 4D,Yes
+Fluxapyroxad,Fungicide,Respiration,Complex II Succinate-dehydrogenase,Pyrazole-4-carbozamide,FRAC C2,Not Listed
+Fumagillin,Insecticide,Unspecified,Unspecified,Unspecified,NA,Not Listed
+Hexaflumuron,Insecticide,Growth,Inhibitors of Chitin Biosynthesis Affecting CHS1,Benzoylureas,IRAC 15,Yes
+Imidacloprid,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Competitive Modulators,Neonicotinoids,IRAC 4A,Yes
+Indoxacarb,Insecticide,Nerve & Muscle,Voltage-Dependent Sodium Channel Blockers,Oxadiazines,IRAC 22A,Not Listed
+Malaoxon,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Organophosphates,IRAC 1B,Yes
+Mandipropamid,Fungicide,Cell Wall Biosynthesis,Cellulose Synthase,Mandelic Acid Amide,FRAC H5,Not Listed
+Metalaxyl,Fungicide,Nucleic Acids Metabolism,RNA Polymerase I,Acylalanine,FRAC A1,Not Listed
+Metazachlor,Herbicide,Cellular Metabolism,Inhibition of Very Long-Chain Fatty Acid Synthesis,a-Chloroacetimide,HRAC 15,Not Listed
+Metconazole,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Methiocarb,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Carbamates,IRAC 1A,Yes
+Methoprotryne,Herbicide,Herbicide,Unspecified,Triazine,NA,Not Listed
+Methoxyfenozide,Insect Growth Regulator,Growth,Ecdysone Receptor Agonists,Diacylhydrazines,IRAC 18,Not Listed
+Metobromuron,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Urea,HRAC 5,Not Listed
+Metolachlor,Herbicide,Cellular Metabolism,Inhibition of Very Long-Chain Fatty Acid Synthesis,a-Chloroacetimide,IRAC 15,Not Listed
+Mevinphos,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Organophosphates,IRAC 1B,Not Listed
+Myclobutanil,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Napropamide,Herbicide,Unspecified,Unspecified,Amide,HRAC Z,Not Listed
+Oxytetracycline,"Fungicide, Microbiocide",Amino Acid and Protein Synthesis,Protein Synethesis,Tetracycline Antibiotic,FRAC D5,Not Listed
+Penthiopyrad,Fungicide,Respiration,Complex II Succinate-dehydrogenase,pyrazole-4-carbozamide,FRAC C2,Not Listed
+Phenmedipham,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Phyenylcarbamate,HRAC 5,Not Listed
+Phosmet,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Organophosphates,IRAC 1B,Yes
+Picoxystrobin,Fungicide,Respiration,Complex III ubiquinol oxidase at cyt b gene,methoxy-acrylate,FRAC C3,Not Listed
+Piperonyl butoxide,Insecticide Synergist,Unclasfied,Unclassified,Unclassified,NA,Not Listed
+Profenophos,Insecticide,Nerve & Muscle,Acetylcholinesterase (ACHE) Inhibitors,Organophosphates,IRAC 1B,Yes
+Prometon,Hebicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Triazine,HRAC 5,Not Listed
+Prometryn,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Triazine,HRAC 5,Not Listed
+Propazine,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Triazine,HRAC 5,No 
+Propiconazole,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Pyraclostrobin,Fungicide,Respiration,Complex III ubiquinol oxidase at cyt b gene,methoxy-carbamate,FRAC C3,Not Listed
+Pyrimethanil,Fungicide,Amino Acid & Protein Synthesis,Methionine Biosynthesis,Pyrimidine,FRAC D1,Not Listed
+Pyriproxyfen,Insecticide,Growth,Juvenile Hormone Mimics,Pyreiproxyfen,IRAC 7C,Not Listed
+Spinetoram,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Allosteric Modulators - Site I,Spinosyns,IRAC 5,Yes
+Spinosad,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Allosteric Modulators - Site I,Spinosyns,IRAC 5,Yes
+Spirotetramat,Insecticide,Growth,Inhibitors of Acetyl CoA Carboxylase,Tetronic and Tetramic Acid Derivatives,IRAC 23A,Not Listed
+Sulfentrazone,Herbicide,Light Activation of ROS^a,Inhibition of Protoporphyrinogen,N-Phenyl-Triazolone,HRAC 14,Not Listed
+Sulfoxaflor,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Competitive Modulators,Sulfoximines,IRAC 4C,Yes
+Tebuconazole,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Tebufenozide,Insect Growth Regulator,Growth,Ecdysone Receptor Agonists,Diacylhydrazines,IRAC 18,Not Listed
+Tebuthiuron,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Urea,HRAC 5,Not Listed
+Terbutryn,Herbicide,Light Activation of ROS^a,Inhibition of Photosynthesis II - Serine 264,Triazine,HRAC 5,Not Listed
+Tetraconazole,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Tetramethrin,Insecticide,Nerve & Muscle,Sodium Channel Modulators,"Pyrethroids, Pyrethrins",IRAC 3A,Yes
+Thiabendazole,Fungicide,Cytosleleton & Motor Proteins,Tubulin Polymerization,Benzimidazole,FRAC B1,Not Listed
+Thiacloprid,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Competitive Modulators,Neonicotinoids,IRAC 4A,Not Listed
+Thiamethoxam,Insecticide,Nerve & Muscle,Nicotinic Acetylcholine Receptor (NACHR) Competitive Modulators,Neonicotinoids,IRAC 4A,Yes
+Thiobencarb,Herbicide,Cellular Metabolism,Inhibition of Very Long-Chain Fatty Acid Synthesis,Thiocarbamate,IRAC 15,Not Listed
+Thiophanate-methyl,Fungicide,Cytosleleton & Motor Proteins,Tubulin Polymerization,Thiophanate,FRAC B1,Not Listed
+Triadimefon,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Triazole,FRAC G1,Not Listed
+Trifloxystrobin,Fungicide,Respiration,Complex III ubiquinol oxidase at cyt b gene,oximino-acetate,FRAC C3,Not Listed
+Triflumizole,Fungicide,Sterol Biosynthesis in Membranes,C14-demethylase in sterol biosynthesis,Imidazole,FRAC G1,Not Listed
