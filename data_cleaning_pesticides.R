@@ -4,6 +4,7 @@
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(reshape2)
 
 setwd("~/Documents/GitHub/SARE")
 
@@ -91,15 +92,31 @@ pest_df <- rbind(LS_df, SS_df)
 # create small scale/large scale column
 pest_df$scale <- ifelse(pest_df$Mass..g. < 1, "small", "large")
 
+#getting rid of column "X'
+pest_df$X <- NULL
+
 str(pest_df)
 
 # view(pest_df)
 
 
+# Cornell Results to long form 
+pest_df_long <- melt(pest_df, 
+                     id.vars = c("File.Name", "Client.ID1", "Client.ID2", "Mass..g.", "scale"))
+# changing column names 
+colnames(pest_df_long) # original column names
+pest_df_long_colnames <- c("file_name", "client_ID1", "client_ID2", "mass_g", "scale", "pesticide_name", "value")
+
+colnames(pest_df_long) <- pest_df_long_colnames
+
+# view(pest_df_long)
+
+
+
 ################################################################################
 # Cleaning LD50 Dataset -- Tosi Lethal
 ################################################################################
-tosi_lethal
+# tosi_lethal
 # looking to find the min LD50 value whether it be from contact or acute exposure types 
 # put min value in its own column 
 
@@ -247,14 +264,52 @@ pest_Desc_combined <- merge(y = pest_Desc_combined, x = pest_Desc_updated , by =
 ## if other_pesticide_name in pest_Desc_combined == pesticide_name, delete row pertaining to the other pesticide name 
 
 
-
 # Merging Tosi Datasets 
 tosi_combined <- merge(TL_simplified, TS_simplified, by = "pesticide_name", all = TRUE)
-view(tosi_combined)
+# view(tosi_combined)
 
 # Merging Tosi combined dataset with the combined pesticide description dataset 
 tosiDesc_combined <- merge(tosi_combined, pest_Desc_combined, by = "pesticide_name", all = TRUE)
-view(tosiDesc_combined)
+# view(tosiDesc_combined)
+
+# removing unwanted columns 
+tosiDesc_combined <- tosiDesc_combined %>% 
+  select(-description.x, -description.y, -pesticide_type.y)
+
+# view(tosiDesc_combined)
+
+
+# Merging combined pesticide description dataset and the long form of Cornell results 
+
+pest_DescResults_combined <- merge(tosiDesc_combined, pest_df_long, by = "pesticide_name", all = TRUE)
+# view(pest_DescResults_combined) ## not sure if this was the final dataset we are looking for 
+
+
+
+
+
+# Cleaning function to merge -- export to csv 
+
+# dataCleaner <- function(oldData, newData, removeCols=TRUE) {
+  # read in data 
+  #if(removeCols=TRUE){
+      #remove columns 
+  #}
+  
+  # merge data 
+  
+  # prepare for write out 
+  #dataOut <- function(oldData)
+    
+    #return(dataOut)
+#}
+
+#data_cleaner(tosiDesc_combined = "old.csv", newData = "new.csv", removeCols=FALSE)
+
+
+
+
+
 
 
 
