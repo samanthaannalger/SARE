@@ -820,10 +820,10 @@ library(devtools)
 # ##########################################################################################
 # 
 # 
-# source("BurnhamFunctionsSARE.R")
+#source("BurnhamFunctionsSARE.R")
 # 
-# virusData <- read.csv("virusData.csv")
-# dilution <- read.csv("RNAdilutionsSARE.csv")
+#virusData <- read.csv("virusData2022.csv")
+#dilution <- read.csv("RNAdilutionsSARE.csv")
 # 
 
 # Program Body:
@@ -842,9 +842,9 @@ library(devtools)
 # make binary variable and use threashld of ct for limit of detection: 
 #TempVarClean <- CT_Threash(data = TempVarClean)
 
-#finalVirusDF <- TempVarClean [TempVarClean$target_name=="DWV",]
-#DWV_SARE2021 <- select(finalVirusDF, ID, NormGenomeCopy) 
+#finalVirusDF <- TempVarClean[TempVarClean$target_name=="DWV",]
+#DWV_SARE2022 <- select(finalVirusDF, ID, NormGenomeCopy) 
 
-#write.csv(DWV_SARE2021, "DWV_SARE2021.csv")
+#write.csv(DWV_SARE2022, "DWV_SARE2022.csv")
 
 
