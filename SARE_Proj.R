@@ -820,31 +820,31 @@ library(devtools)
 # ##########################################################################################
 # 
 # 
-#source("BurnhamFunctionsSARE.R")
+source("BurnhamFunctionsSARE.R")
 # 
-#virusData <- read.csv("virusData2022.csv")
-#dilution <- read.csv("RNAdilutionsSARE.csv")
+virusData <- read.csv("virusData2022.csv")
+dilution <- read.csv("RNAdilutions2022.csv")
 # 
 
 # Program Body:
 # preliminary cleaning -> removes duplicate rows and control data
-#TempVarClean <- PrelimClean(data = virusData)
+TempVarClean <- PrelimClean(data = virusData)
 
 # merge data sets to inlude dilution data for Normalization:
-#TempVarClean <- merge(TempVarClean, dilution, by = "ID", all.x = TRUE)
+TempVarClean <- merge(TempVarClean, dilution, by = "ID", all.x = TRUE)
 
 # normalize data set Viral Load
-#TempVarClean <- VirusNorm(number_bees = 50, data = TempVarClean)
+TempVarClean <- VirusNorm(number_bees = 50, data = TempVarClean)
 
 # normalize viral laod by actin
-#TempVarClean <- actinNormal(data = TempVarClean)
+TempVarClean <- actinNormal(data = TempVarClean)
 
 # make binary variable and use threashld of ct for limit of detection: 
-#TempVarClean <- CT_Threash(data = TempVarClean)
+TempVarClean <- CT_Threash(data = TempVarClean)
 
-#finalVirusDF <- TempVarClean[TempVarClean$target_name=="DWV",]
-#DWV_SARE2022 <- select(finalVirusDF, ID, NormGenomeCopy) 
+finalVirusDF <- TempVarClean[TempVarClean$target_name=="DWV",]
+DWV_SARE2022 <- select(finalVirusDF, ID, NormGenomeCopy) 
 
-#write.csv(DWV_SARE2022, "DWV_SARE2022.csv")
+write.csv(DWV_SARE2022, "DWV_SARE2022.csv")
 
 
