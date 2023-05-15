@@ -217,7 +217,7 @@ varLoad <-ggplot(varroaLoad_Sum, aes(x=time, y=mean, group=UBO_Char)) +
   theme_classic(base_size = 20) +
   theme(legend.position = c(.2,.9)) +
   geom_errorbar(aes(ymin = mean-se, ymax = mean+se, width = 0.1 ,color=UBO_Char))+
-  labs(x="Sampling Date", y="Varroa Load", color=" ") +
+  labs(x="Sampling Month", y="Varroa Load", color=" ") +
   scale_color_manual(values = c("tomato3", "darkturquoise"))
 varLoad
 
