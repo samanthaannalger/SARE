@@ -58,25 +58,59 @@ ds_2022$uboPrev <- ifelse(ds_2022$UBO_assay_score >= 0.6, 1, 0)
 ############################################################################
 
 
+# remove NAs from uba data set and make character variable
+ds_2022UBO <- ds_2022[!is.na(ds_2022$uboPrev),]
+ds_2022UBO$uboChar <- ifelse(ds_2022UBO$uboPrev==0, "UBO Neg.", "UBO pos.") 
+no0 <- ds_2022UBO[ds_2022UBO$virusPrev == 1, ] # only positive virus bees
+
+# ubo by virus load
+ggplot(no0, aes(x=yard, y=NormGenomeCopy, color=uboChar)) + 
+  geom_boxplot(size=1) +
+  ylab("DWV (genome copies/bee)") + # y axis label
+  xlab("Bee Yard") + # x axis label
+  labs(color=NULL ) +
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_manual(values = c("blue", "slategrey")) +
+  scale_y_continuous(trans='log10')
+  
+
+vl <- lm(data = no0, logDWV ~ uboPrev * yard)
+Anova(vl)
 
 
-no0 <- ds_2022[ds_2022$virusPrev == 1, ]
+
+# summary of prevalence for virus by ubo and yard
+prevSum <- ds_2022UBO %>% # operate on the dataframe (ds) and assign to new object (V)
+  group_by(uboChar, yard) %>% # pick variables to group by
+  summarise(
+    mean = mean(virusPrev, na.rm=T), # mean
+    N = length(virusPrev), # sample size
+  ) 
+
+
+# ub0 by virus prev
+ggplot(prevSum, aes(x=yard, y=mean, fill=uboChar)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  ylab("DWV Prevalence") + # y axis label
+  xlab("Bee Yard") + # x axis label
+  labs(fill=NULL ) +
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_fill_manual(values = c("blue", "slategrey"))
+
+
+vp <- glm(data = ds_2022UBO, virusPrev ~ uboPrev * yard, family = binomial(link="logit"))
+Anova(vp)
 
 
 
-no0
-
-boxplot(no0$logDWV~ no0$uboPrev)
-
-plot(ds_2022$UBO_assay_score, ds_2022$NormGenomeCopy)
-
-x <- lm(no0$NormGenomeCopy ~ n0$UBO_assay_score)
 
 
-summary(x)
 
-x <- glm(data = ds_2022, virusPrev ~ uboPrev, family = binomial(link="logit"))
-Anova(x)
+
+
+
 
 
 
@@ -168,11 +202,13 @@ FKB_2021 <- select(FKB_2021, lab_ID, FKB_percentile)
 colnames(FKB_2021) <- c("lab_ID", "percent_hygienic")
 
 # merge hygienic behavior back in
-ds_2021_merged <- merge(x=ds_2021, y=FKB_2021)
+ds_2021_merged <- merge(x=ds_2021[!is.na(ds_2021$lab_ID),], y=FKB_2021[!is.na(FKB_2021$lab_ID),], by = "lab_ID", all.x = TRUE)
+
+
 
 ## Plot HB by varroa load
 # Add regression lines
-ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
+ggplot(ds_2021_merged, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
                color=as.character(sampling_event))) +
   #geom_point(size=0) + 
   geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
@@ -187,7 +223,7 @@ ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees,
 
 
 # new plot that removes time points as a factor
-ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
+ggplot(ds_2021_merged, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
   #geom_point(size=0) + 
   geom_smooth(method=lm, se=TRUE, fullrange=TRUE) +
   geom_point(size=2) +
@@ -197,7 +233,7 @@ ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
 
 
 # HB by varroa load model
-mod2 <- lm(data=ds, varroa_load_mites.100.bees ~ percent_hygienic + sampling_event )
+mod2 <- lm(data=ds, varroa_load_mites.100.bees ~ FKB_percentile + sampling_event )
 summary(mod2)
 Anova(mod2)
 
@@ -209,7 +245,7 @@ Anova(mod2)
 # dst2 <- ds[ds$sampling_event==2,]
 
 # Hygienic behavior by hive/yard, points number of hives, threshold dotted bar
-ggplot(ds_2021, aes(x=yard, y=percent_hygienic, color=yard)) + 
+ggplot(ds_2021_merged, aes(x=yard, y=percent_hygienic, color=yard)) + 
   geom_boxplot(size=1) +
   geom_text(aes(label=lab_ID), size=5) +
   guides(color = guide_legend(override.aes = list(label = ''))) +
@@ -223,18 +259,18 @@ ggplot(ds_2021, aes(x=yard, y=percent_hygienic, color=yard)) +
 
 
 # set up the model
-mod3 <- aov(data = ds_2021, percent_hygienic ~ yard)
+mod3 <- aov(data = ds_2021_merged, percent_hygienic ~ yard)
 summary(mod3)
 
 
 # print table in increasing order based on some variable
-ds_2021[order(ds_2021$percent_hygienic, decreasing = TRUE),]
+ds_2021_merged[order(ds_2021_merged$percent_hygienic, decreasing = TRUE),]
 
 
 
 ##### HONEY YIELD ANALYSIS
 # take only sampling event 4
-dst4 <- ds_2021[ds_2021$sampling_event==4,]
+dst4 <- ds_2021_merged[ds_2021_merged$sampling_event==4,]
 
 # plot Honey yield by hive/yard
 ggplot(dst4, aes(x=yard, y=honey_removed, color=yard)) + 
@@ -251,7 +287,7 @@ ggplot(dst4, aes(x=yard, y=honey_removed, color=yard)) +
 
 #### FRAMES OF BEES ANALYSIS
 # take only sampling event 1
-dst1 <- ds_2021[ds_2021$sampling_event==1,]
+dst1 <- ds_2021_merged[ds_2021_merged$sampling_event==1,]
 
 # plot Honey yield by hive/yard
 ggplot(dst1, aes(x=yard, y=frame_of_bees, color=yard)) + 
@@ -267,8 +303,8 @@ ggplot(dst1, aes(x=yard, y=frame_of_bees, color=yard)) +
 
 
 # 2021 percent hygienic freeze kill
-ds_2021$FK_binary <- ifelse(ds_2021$FKB_percentile >= 0.95, 1,0) #"hygienic", "nonhygienic")
-mean(ds_2021$FK_binary, na.rm=T) # get percentage of hygienic UBO
+ds_2021_merged$FK_binary <- ifelse(ds_2021_merged$FKB_percentile >= 0.95, 1,0) #"hygienic", "nonhygienic")
+mean(ds_2021_merged$FK_binary, na.rm=T) # get percentage of hygienic UBO
 
 
 
