@@ -309,7 +309,32 @@ mean(ds_2021_merged$FK_binary, na.rm=T) # get percentage of hygienic UBO
 
 
 
+#########################################################################################################
+# 2021 Survival Model
 
+# create survival variable
+ds_2021_merged$survival <- ifelse(ds_2021_merged$overwinter_success == "dead", 0, 
+                                  ifelse(ds_2021_merged$overwinter_success == "alive", 1, NA))
+
+
+survDF <- ds_2021_merged %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
+  group_by(field_ID) %>% # pick variables to group by
+  summarise(
+    
+    varroa = mean(varroa_load_mites.100.bees, na.rm=T),
+    nosema = mean(nosema_load_spores.bee, na.rm=T),
+    hygienic = mean(FKB_percentile, na.rm=T),
+    honey = mean(honey_removed, na.rm=T),
+    weight = mean(october_weight, na.rm=T),
+    surv = max(survival, na.rm=T),
+    
+)
+
+survDF
+
+max(ds_2021_merged$survival, na.rm=T)
+
+table(ds_2021_merged$survival,ds_2021_merged$field_ID)
 
 
 
@@ -813,6 +838,7 @@ pcaDS <- orderedDF[!orderedDF$lab_ID==34,]
 pcaDS <- select(pcaDS, overwinter_success, varroa, nosema, hygienic, honey, weight, NormGenomeCopy)
 
 
+pcaDS$overwinter_success
 
 
 mod <- aov(pcaDS$honey~pcaDS$overwinter_success)
