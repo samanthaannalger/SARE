@@ -109,7 +109,7 @@ pest_df_long_colnames <- c("file_name", "client_ID1", "client_ID2", "mass_g", "s
 
 colnames(pest_df_long) <- pest_df_long_colnames
 
-# view(pest_df_long)
+view(pest_df_long)
 
 
 
@@ -283,6 +283,13 @@ tosiDesc_combined <- tosiDesc_combined %>%
 
 pest_DescResults_combined <- merge(tosiDesc_combined, pest_df_long, by = "pesticide_name", all = TRUE)
 # view(pest_DescResults_combined) ## not sure if this was the final dataset we are looking for 
+
+
+
+
+
+
+View(pest_DescResults_combined)
 
 
 
