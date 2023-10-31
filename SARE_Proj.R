@@ -22,6 +22,7 @@ library(imputeTS)
 #ds <- read.csv("SARE_Field_database2022.csv", header = TRUE, stringsAsFactors = FALSE)
 ds <- read.csv("SARE_field_database2022.csv", header = TRUE, stringsAsFactors = FALSE)
 virus <- read.csv("DWV_SARE2021.csv", header = TRUE, stringsAsFactors = FALSE)
+virus2022 <- read.csv("DWV_SARE2022.csv", header = TRUE, stringsAsFactors = FALSE)
 
 # colonies that were removed
 d <- ds[grepl(ds$comments, pattern = "removed from", fixed = TRUE),]
@@ -42,6 +43,75 @@ ds_2022$varroaTreated <- ifelse(ds_2022$sampling_event == 9 & ds_2022$varroa_loa
 
 # removing colonies that were treated
 ds_2022 <- ds_2022[ds_2022$varroaTreated == "not_treated",]
+
+# merge in 2022 virus data and make log trans and prevalence data
+ds_2022 <- merge(x = ds_2022,y = virus2022, all.x = TRUE)
+ds_2022$NormGenomeCopy <- ifelse(is.na(ds_2022$NormGenomeCopy), 0, ds_2022$NormGenomeCopy)
+ds_2022$virusPrev <- ifelse(ds_2022$NormGenomeCopy > 0, 1, 0) # making all negative IDs into 0s Chekc if there should be some NAs
+ds_2022$logDWV <- log10(ds_2022$NormGenomeCopy + 1)
+
+ds_2022$uboPrev <- ifelse(ds_2022$UBO_assay_score >= 0.6, 1, 0)
+
+
+############################################################################
+# 2022 Virus
+############################################################################
+
+
+# remove NAs from uba data set and make character variable
+ds_2022UBO <- ds_2022[!is.na(ds_2022$uboPrev),]
+ds_2022UBO$uboChar <- ifelse(ds_2022UBO$uboPrev==0, "UBO Neg.", "UBO pos.") 
+no0 <- ds_2022UBO[ds_2022UBO$virusPrev == 1, ] # only positive virus bees
+
+# ubo by virus load
+ggplot(no0, aes(x=yard, y=NormGenomeCopy, color=uboChar)) + 
+  geom_boxplot(size=1) +
+  ylab("DWV (genome copies/bee)") + # y axis label
+  xlab("Bee Yard") + # x axis label
+  labs(color=NULL ) +
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_color_manual(values = c("blue", "slategrey")) +
+  scale_y_continuous(trans='log10')
+  
+
+vl <- lm(data = no0, logDWV ~ uboPrev * yard)
+Anova(vl)
+
+
+
+# summary of prevalence for virus by ubo and yard
+prevSum <- ds_2022UBO %>% # operate on the dataframe (ds) and assign to new object (V)
+  group_by(uboChar, yard) %>% # pick variables to group by
+  summarise(
+    mean = mean(virusPrev, na.rm=T), # mean
+    N = length(virusPrev), # sample size
+  ) 
+
+
+# ub0 by virus prev
+ggplot(prevSum, aes(x=yard, y=mean, fill=uboChar)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  ylab("DWV Prevalence") + # y axis label
+  xlab("Bee Yard") + # x axis label
+  labs(fill=NULL ) +
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "top") + # place the legend at the top
+  scale_fill_manual(values = c("blue", "slategrey"))
+
+
+vp <- glm(data = ds_2022UBO, virusPrev ~ uboPrev * yard, family = binomial(link="logit"))
+Anova(vp)
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -162,11 +232,13 @@ FKB_2021 <- select(FKB_2021, lab_ID, FKB_percentile)
 colnames(FKB_2021) <- c("lab_ID", "percent_hygienic")
 
 # merge hygienic behavior back in
-ds_2021 <- merge(x=ds_2021, y=FKB_2021, all.x = TRUE)
+ds_2021_merged <- merge(x=ds_2021[!is.na(ds_2021$lab_ID),], y=FKB_2021[!is.na(FKB_2021$lab_ID),], by = "lab_ID", all.x = TRUE)
+
+
 
 ## Plot HB by varroa load
 # Add regression lines
-ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
+ggplot(ds_2021_merged, aes(x=percent_hygienic, y=varroa_load_mites.100.bees, 
                color=as.character(sampling_event))) +
   #geom_point(size=0) + 
   geom_smooth(method=lm, se=FALSE, fullrange=TRUE) +
@@ -181,7 +253,7 @@ ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees,
 
 
 # new plot that removes time points as a factor
-ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
+ggplot(ds_2021_merged, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
   #geom_point(size=0) + 
   geom_smooth(method=lm, se=TRUE, fullrange=TRUE) +
   geom_point(size=2) +
@@ -191,7 +263,7 @@ ggplot(ds_2021, aes(x=percent_hygienic, y=varroa_load_mites.100.bees)) +
 
 
 # HB by varroa load model
-mod2 <- lm(data=ds, varroa_load_mites.100.bees ~ percent_hygienic + sampling_event )
+mod2 <- lm(data=ds, varroa_load_mites.100.bees ~ FKB_percentile + sampling_event )
 summary(mod2)
 Anova(mod2)
 
@@ -203,7 +275,7 @@ Anova(mod2)
 # dst2 <- ds[ds$sampling_event==2,]
 
 # Hygienic behavior by hive/yard, points number of hives, threshold dotted bar
-ggplot(ds_2021, aes(x=yard, y=percent_hygienic, color=yard)) + 
+ggplot(ds_2021_merged, aes(x=yard, y=percent_hygienic, color=yard)) + 
   geom_boxplot(size=1) +
   geom_text(aes(label=lab_ID), size=5) +
   guides(color = guide_legend(override.aes = list(label = ''))) +
@@ -217,18 +289,18 @@ ggplot(ds_2021, aes(x=yard, y=percent_hygienic, color=yard)) +
 
 
 # set up the model
-mod3 <- aov(data = ds_2021, percent_hygienic ~ yard)
+mod3 <- aov(data = ds_2021_merged, percent_hygienic ~ yard)
 summary(mod3)
 
 
 # print table in increasing order based on some variable
-ds_2021[order(ds_2021$percent_hygienic, decreasing = TRUE),]
+ds_2021_merged[order(ds_2021_merged$percent_hygienic, decreasing = TRUE),]
 
 
 
 ##### HONEY YIELD ANALYSIS
 # take only sampling event 4
-dst4 <- ds_2021[ds_2021$sampling_event==4,]
+dst4 <- ds_2021_merged[ds_2021_merged$sampling_event==4,]
 
 # plot Honey yield by hive/yard
 ggplot(dst4, aes(x=yard, y=honey_removed, color=yard)) + 
@@ -245,7 +317,7 @@ ggplot(dst4, aes(x=yard, y=honey_removed, color=yard)) +
 
 #### FRAMES OF BEES ANALYSIS
 # take only sampling event 1
-dst1 <- ds_2021[ds_2021$sampling_event==1,]
+dst1 <- ds_2021_merged[ds_2021_merged$sampling_event==1,]
 
 # plot Honey yield by hive/yard
 ggplot(dst1, aes(x=yard, y=frame_of_bees, color=yard)) + 
@@ -261,13 +333,38 @@ ggplot(dst1, aes(x=yard, y=frame_of_bees, color=yard)) +
 
 
 # 2021 percent hygienic freeze kill
-ds_2021$FK_binary <- ifelse(ds_2021$FKB_percentile >= 0.95, 1,0) #"hygienic", "nonhygienic")
-mean(ds_2021$FK_binary, na.rm=T) # get percentage of hygienic UBO
+ds_2021_merged$FK_binary <- ifelse(ds_2021_merged$FKB_percentile >= 0.95, 1,0) #"hygienic", "nonhygienic")
+mean(ds_2021_merged$FK_binary, na.rm=T) # get percentage of hygienic UBO
 
 
 
 
+#########################################################################################################
+# 2021 Survival Model
 
+# create survival variable
+ds_2021_merged$survival <- ifelse(ds_2021_merged$overwinter_success == "dead", 0, 
+                                  ifelse(ds_2021_merged$overwinter_success == "alive", 1, NA))
+
+
+survDF <- ds_2021_merged %>% # operate on the dataframe (ds_2021) and assign to new object (pltN)
+  group_by(field_ID) %>% # pick variables to group by
+  summarise(
+    
+    varroa = mean(varroa_load_mites.100.bees, na.rm=T),
+    nosema = mean(nosema_load_spores.bee, na.rm=T),
+    hygienic = mean(FKB_percentile, na.rm=T),
+    honey = mean(honey_removed, na.rm=T),
+    weight = mean(october_weight, na.rm=T),
+    surv = max(survival, na.rm=T),
+    
+)
+
+survDF
+
+max(ds_2021_merged$survival, na.rm=T)
+
+table(ds_2021_merged$survival,ds_2021_merged$field_ID)
 
 
 
@@ -847,6 +944,7 @@ pcaDS <- orderedDF[!orderedDF$lab_ID==34,]
 pcaDS <- select(pcaDS, overwinter_success, varroa, nosema, hygienic, honey, weight, NormGenomeCopy)
 
 
+pcaDS$overwinter_success
 
 
 mod <- aov(pcaDS$honey~pcaDS$overwinter_success)
@@ -926,10 +1024,10 @@ library(devtools)
 # ##########################################################################################
 # 
 # 
-# source("BurnhamFunctionsSARE.R")
+#source("BurnhamFunctionsSARE.R")
 # 
-# virusData <- read.csv("virusData.csv")
-# dilution <- read.csv("RNAdilutionsSARE.csv")
+#virusData <- read.csv("virusData2022.csv")
+#dilution <- read.csv("RNAdilutions2022.csv")
 # 
 
 # Program Body:
@@ -948,9 +1046,198 @@ library(devtools)
 # make binary variable and use threashld of ct for limit of detection: 
 #TempVarClean <- CT_Threash(data = TempVarClean)
 
-#finalVirusDF <- TempVarClean [TempVarClean$target_name=="DWV",]
-#DWV_SARE2021 <- select(finalVirusDF, ID, NormGenomeCopy) 
+#finalVirusDF <- TempVarClean[TempVarClean$target_name=="DWV",]
+#DWV_SARE2022 <- select(finalVirusDF, ID, NormGenomeCopy) 
 
-#write.csv(DWV_SARE2021, "DWV_SARE2021.csv")
+#write.csv(DWV_SARE2022, "DWV_SARE2022.csv")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##################################################################################
+###-------------------------------2022 Spring pics-----------------------------###
+##################################################################################
+# selection model
+
+
+# clean data:
+ds_2022_clean <- select(ds_2022, varroa_load_mites.100.bees, nosema_load_spores.bee, FKB_percentile, UBO_assay_score, NormGenomeCopy, yard, lab_ID)
+ds_2022_clean <- ds_2022_clean[!is.na(ds_2022_clean$lab_ID), ]
+
+# aggregate mite load by sampling event and yard
+modelDF <- ds_2022_clean %>% # operate on the dataframe (ds) and assign to new object 
+  group_by(lab_ID, yard) %>% # pick variables to group by
+  summarise(
+    varroa = mean(varroa_load_mites.100.bees, na.rm=T),
+    nosema = mean(nosema_load_spores.bee, na.rm=T),
+    fkb = mean(FKB_percentile, na.rm=T),
+    ubo = mean(UBO_assay_score, na.rm=T),
+    dwv = mean(NormGenomeCopy, na.rm=T),
+  ) 
+
+
+
+# impute missing values:
+imputedDF <- na_mean(modelDF[,3:7])
+
+# merge ds back together with ID vars
+imputedDF <- cbind(imputedDF, modelDF[,1:2])
+
+# create function to rescale
+range01 <- function(x){
+  (x-min(x))/(max(x)-min(x))
+}
+
+
+# call the function on each var
+varroaScaled <- range01(imputedDF$varroa)
+nosemaScaled <- range01(imputedDF$nosema)
+fkbScaled <- range01(imputedDF$fkb)
+uboScaled <- range01(imputedDF$ubo)
+dwvScaled <- range01(imputedDF$dwv)
+
+
+mn <- mean(sum(nosemaScaled), sum(fkbScaled), sum(varroaScaled), sum(uboScaled), sum(dwvScaled))
+
+varroaScaled <- (varroaScaled/sum(varroaScaled))*mn
+nosemaScaled <- (nosemaScaled/sum(nosemaScaled))*mn
+fkbScaled <- (fkbScaled/sum(fkbScaled))*mn
+uboScaled <- (uboScaled/sum(uboScaled))*mn
+dwvScaled <- (dwvScaled/sum(dwvScaled))*mn
+
+# create histogram data set of scaled vals
+histogram <- data.frame(varroaScaled, nosemaScaled, fkbScaled, uboScaled, dwvScaled)
+histogramLong <- gather(histogram, condition, measurement, varroaScaled, nosemaScaled, fkbScaled, uboScaled, dwvScaled)
+
+
+# plot histogram of all scaled values
+ggplot(histogramLong ,aes(x=measurement, fill=condition)) + 
+  geom_histogram(alpha = 0.5, position = "identity") +
+  ylab("Frequency") + # y axis label
+  xlab("Parameter Value") + # x axis label
+  theme_minimal(base_size = 17) + # size of the text and label ticks
+  theme(legend.position = "right") + # place the legend at the top
+  scale_color_viridis(discrete = TRUE, option="H", name="Parameter") # color pallets option = A-H
+
+
+
+#Brood production= 3
+#Varroa load= 2
+#Nosema load= 1
+#Virus load= 1
+#Hygienic behavior= 5
+#Honey production= 4
+#October weight= 4
+# 48, 51, 44, 63, 61
+
+
+#c(varroa=12, nosema=5, hygienic=12, honey=10, weight=8, dwv=1)
+# create fitness function
+Fitness = (-3 * varroaScaled) +
+  (-3 * nosemaScaled) +
+  (6 * uboScaled) +
+  (-3 * dwvScaled) +
+  (3 * fkbScaled)
+
+
+
+# Fitness = (-16.8 * varroaScaled) + 
+#   (18.92 * nosemaScaled) + 
+#   (0.424 * hygienicScaled) + 
+#   (-8.432 * dwvScaled) +
+#   (-43.82 * honeyScaled) + 
+#   (0.55 * weightScaled) 
+
+# rescale 0 to 1
+imputedDF$Fitness <- range01(Fitness)
+
+
+
+# print the sorted data set
+orderedDF <- imputedDF[order(imputedDF$Fitness, decreasing = TRUE),]  
+orderedDF
+
+
+
+write.csv(orderedDF, "modelselectionSARE23.csv")
+
+
+pcaDS <- orderedDF[!orderedDF$lab_ID==34,]
+pcaDS <- select(pcaDS, overwinter_success, varroa, nosema, hygienic, honey, weight, NormGenomeCopy)
+
+
+
+
+mod <- aov(pcaDS$honey~pcaDS$overwinter_success)
+summary(mod)
+
+boxplot(pcaDS$honey~pcaDS$overwinter_success)
+
+
+set.seed(123)
+ind <- sample(2, nrow(pcaDS),
+              replace = TRUE,
+              prob = c(0.6, 0.4))
+
+training <- pcaDS[ind==1,]
+testing <- pcaDS[ind==2,]
+
+
+
+
+linear <- lda(overwinter_success~., training)
+linear$scaling*1000000000000
+
+p1 <- predict(linear, training)$class
+tab <- table(Predicted = p1, Actual = training$overwinter_success)
+tab
+
+sum(diag(tab))/sum(tab)
+
+p2 <- predict(linear, testing)$class
+tab1 <- table(Predicted = p2, Actual = testing$overwinter_success)
+tab1
+sum(diag(tab1))/sum(tab1)
+
+
+
+
+
+
+plot(sort(imputedDF$Fitness))
+
+hist(imputedDF$Fitness, breaks = 10)
+
 
 
