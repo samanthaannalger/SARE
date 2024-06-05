@@ -23,6 +23,8 @@ library(imputeTS)
 ds <- read.csv("SARE_field_database2022.csv", header = TRUE, stringsAsFactors = FALSE)
 virus <- read.csv("DWV_SARE2021.csv", header = TRUE, stringsAsFactors = FALSE)
 virus2022 <- read.csv("DWV_SARE2022.csv", header = TRUE, stringsAsFactors = FALSE)
+virus2023 <- read.csv("Virus results 2024.csv", header = TRUE, stringsAsFactors = FALSE)
+ds2023 <- read.csv("SARE field database2023.csv", header = TRUE, stringsAsFactors = FALSE)
 
 # colonies that were removed
 d <- ds[grepl(ds$comments, pattern = "removed from", fixed = TRUE),]
@@ -106,6 +108,49 @@ Anova(vp)
 
 
 
+
+
+##########################
+#2023 Virus Analyses
+
+#Viruses by treatment group (NPQ +FHA)
+
+ds_2023_only <- filter(ds2023, year == 2023)
+
+full_ds2023 <- merge(virus2023, ds_2023_only, by = c('lab_ID', 'yard')) 
+
+full_ds2023$uboPrev <- ifelse(full_ds2023$UBO_assay_score >= 0.6, 1, 0)
+
+full_ds2023_sel <- full_ds2023 %>% 
+  select(lab_ID, yard, treatment_group, uboPrev, Copies.uL.DWV.A, Copies.uL.DWV.B, Copies.uL.BQCV, Copies.uL.CBPV, Copies.uL.IAPV, Copies.uL.SBV, Copies.uL.LSV)
+
+full_ds2023_selV <- full_ds2023_sel %>% 
+  pivot_longer(
+    cols = Copies.uL.DWV.A:Copies.uL.LSV,
+    names_to = "virus",
+    values_to = "virus_count"
+  )
+
+
+full_ds2023_sel_sum <-  full_ds2023_sel %>% 
+  group_by(treatment_group) %>% 
+  summarise(meanDWVa = mean(Copies.uL.DWV.A),
+            meanDWVb = mean(Copies.uL.DWV.B),
+            meanLSV = mean(Copies.uL.LSV),
+            meanCBPV = mean(Copies.uL.CBPV),
+            meanBQCV = mean(Copies.uL.BQCV),
+            meanIAPV = mean(Copies.uL.IAPV),
+            meanSBV = mean(Copies.uL.SBV))
+
+
+barplot(full_ds2023_sel_sum)
+
+
+
+to_plot <- pivot_longer(full_ds2023_sel_sum, cols = starts_with("mean"), names_to = "Virus", values_to = "Count")
+
+ggplot(to_plot, aes(x = Virus, y = Count, fill = treatment_group)) +
+  geom_bar(position="dodge", stat="identity")
 
 
 
@@ -802,21 +847,6 @@ ggplot(ds_2022, aes(x=yard, y=UBO_assay_score, color=yard)) +
   scale_color_viridis(discrete = TRUE, option="H") +# color pallets option = A-H
   geom_hline(yintercept=.6, linetype="dashed",
              color = "red", size=1)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
