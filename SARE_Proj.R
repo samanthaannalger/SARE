@@ -901,7 +901,56 @@ fortAndRain2023 <- fortAndRain[fortAndRain$year == 2023,]
 # select useful cols
 clean2023 <- select(fortAndRain2023, yard, UBO_assay_score, field_ID, date_collected, varroa_load_mites.100.bees, nosema_load_spores.bee )
 
+# remove NAs
+clean2023 <- clean2023[!is.na(clean2023$UBO_assay_score),]
 
+idList <- ds2023[1016:1044,]$lab_ID
+yn <- grepl("?", idList, fixed = TRUE)
+selectionList <- idList[!yn]
+
+
+selectedTF <-  rep(NA, length(clean2023$field_ID))
+for(i in 1:length(clean2023$field_ID)){
+  
+  selectedTF[i] <- clean2023$field_ID[i] %in% selectionList
+}
+
+
+filteredRain <- clean2023[selectedTF,]
+
+# make vars numeric
+filteredRain$varroa <- as.numeric(filteredRain$varroa_load_mites.100.bees)
+filteredRain$nosema <- as.numeric(filteredRain$nosema_load_spores.bee)
+uboScaled <- as.numeric(filteredRain$UBO_assay_score)
+
+# create function to rescale
+range01 <- function(x){
+  (x-min(x))/(max(x)-min(x))
+}
+
+
+# call the function on each var
+varroaScaled <- range01(filteredRain$varroa)
+nosemaScaled <- range01(filteredRain$nosema)
+
+
+mn <- mean(c(sum(nosemaScaled), sum(varroaScaled), sum(uboScaled)))
+
+varroaScaled <- (varroaScaled/sum(varroaScaled))*mn
+nosemaScaled <- (nosemaScaled/sum(nosemaScaled))*mn
+uboScaled <- (uboScaled/sum(uboScaled))*mn
+
+
+Fitness = (-3 * varroaScaled) +
+  (-3 * nosemaScaled) +
+  (3 * uboScaled) 
+
+filteredRain$fitness <- range01(Fitness)
+filteredRain$varroaScaled <- varroaScaled
+filteredRain$nosemaScaled <- nosemaScaled 
+filteredRain$uboScaled <- uboScaled
+
+write.csv(filteredRain, "2023SARE_rankings.csv")
 
 ##################################################################################
 ### Code Stop (section models below for spring)
