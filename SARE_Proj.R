@@ -115,48 +115,85 @@ Anova(vp)
 
 #Viruses by treatment group (NPQ +FHA)
 
+# only 2023 data
 ds_2023_only <- filter(ds2023, year == 2023)
 
+# merge field and virus ds
 full_ds2023 <- merge(virus2023, ds_2023_only, by = c('lab_ID', 'yard')) 
 
-full_ds2023$uboPrev <- ifelse(full_ds2023$UBO_assay_score >= 0.6, 1, 0)
-
+# select relevant variables
 full_ds2023_sel <- full_ds2023 %>% 
-  select(lab_ID, yard, treatment_group, uboPrev, Copies.uL.DWV.A, Copies.uL.DWV.B, Copies.uL.BQCV, Copies.uL.CBPV, Copies.uL.IAPV, Copies.uL.SBV, Copies.uL.LSV)
+  select(lab_ID, yard, treatment_group, UBO_assay_score, Copies.uL.DWV.A, Copies.uL.DWV.B, Copies.uL.BQCV, Copies.uL.CBPV, Copies.uL.IAPV, Copies.uL.SBV, Copies.uL.LSV)
 
-full_ds2023_selV <- full_ds2023_sel %>% 
+# makes it long form
+full_ds2023_long <- full_ds2023_sel %>% 
   pivot_longer(
     cols = Copies.uL.DWV.A:Copies.uL.LSV,
     names_to = "virus",
     values_to = "virus_count"
   )
 
+# unique cases of ubo score for each id
+lookupTable <- unique(select(full_ds2023_long, lab_ID, UBO_assay_score)[complete.cases(select(full_ds2023_long, lab_ID, UBO_assay_score)),])
 
-full_ds2023_sel_sum <-  full_ds2023_sel %>% 
-  group_by(treatment_group) %>% 
-  summarise(meanDWVa = mean(Copies.uL.DWV.A),
-            meanDWVb = mean(Copies.uL.DWV.B),
-            meanLSV = mean(Copies.uL.LSV),
-            meanCBPV = mean(Copies.uL.CBPV),
-            meanBQCV = mean(Copies.uL.BQCV),
-            meanIAPV = mean(Copies.uL.IAPV),
-            meanSBV = mean(Copies.uL.SBV))
+# delete old assay score column
+full_ds2023_long$UBO_assay_score <- NULL
 
+# merge assay score back in
+full_ds2023_long_merged <- merge(x = full_ds2023_long, y = lookupTable, all.x = T, by = c("lab_ID"))
 
-barplot(full_ds2023_sel_sum)
+# add assay score binary
+full_ds2023_long_merged$uboPrev <- ifelse(full_ds2023_long_merged$UBO_assay_score >= 0.6, 1, 0)
 
+# remove repeated rows from mutiple time points
+virusDataClean <- unique(full_ds2023_long_merged)
 
-
-to_plot <- pivot_longer(full_ds2023_sel_sum, cols = starts_with("mean"), names_to = "Virus", values_to = "Count")
-
-ggplot(to_plot, aes(x = Virus, y = Count, fill = treatment_group)) +
-  geom_bar(position="dodge", stat="identity")
-
-
-
+# summarize by treatment group
+full_ds2023_sel_sum <-  virusDataClean %>% 
+  group_by(treatment_group, virus) %>% 
+  summarise(mean = mean(virus_count+1, na.rm = T),
+            sd = sd(virus_count+1, na.rm = T),
+            n = length(virus_count),
+            se = sd/sqrt(n),
+    )
 
 
 
+ggplot(full_ds2023_sel_sum, aes(x=virus, y=(mean), fill=treatment_group)) +
+  geom_bar(position="dodge", stat="identity") +
+  theme_minimal(base_size = 18) +
+  scale_y_log10() +
+  geom_errorbar(aes(x = virus, ymin=(mean - se), ymax=(mean + se)), width=.2,
+                position=position_dodge(.9)) +
+  labs(x="Virus", y="Virus Load", fill = "Treatment:") +
+  theme(legend.position = c(.8,.85)) +
+  scale_fill_manual(values = c("#E77624", "#519E9A")) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) 
+
+
+
+# summarize by treatment group
+full_ds2023_sel_UBO <-  virusDataClean %>% 
+  group_by(uboPrev, virus) %>% 
+  summarise(mean = mean(virus_count+1, na.rm = T),
+            sd = sd(virus_count+1, na.rm = T),
+            n = length(virus_count),
+            se = sd/sqrt(n),
+  )
+
+# remove NAs
+full_ds2023_sel_UBO <- full_ds2023_sel_UBO[!is.na(full_ds2023_sel_UBO$uboPrev),]
+
+ggplot(full_ds2023_sel_UBO, aes(x=virus, y=(mean), fill=as.character(uboPrev))) +
+  geom_bar(position="dodge", stat="identity") +
+  theme_minimal(base_size = 18) +
+  scale_y_log10() +
+  geom_errorbar(aes(x = virus, ymin=(mean - se), ymax=(mean + se)), width=.2,
+                position=position_dodge(.9)) +
+  labs(x="Virus", y="Virus Load", fill = "UBO:") +
+  theme(legend.position = c(.8,.85)) +
+  scale_fill_manual(values = c("#E77624", "#519E9A")) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) 
 
 
 
@@ -849,6 +886,20 @@ ggplot(ds_2022, aes(x=yard, y=UBO_assay_score, color=yard)) +
              color = "red", size=1)
 
 
+
+
+########################################################################
+#### 2023 data selection cleaning
+########################################################################
+
+# only two yards
+fortAndRain <- ds2023[ds2023$yard == "Fortin" | ds2023$yard == "Rainville",]
+
+# only 2023
+fortAndRain2023 <- fortAndRain[fortAndRain$year == 2023,]
+
+# select useful cols
+clean2023 <- select(fortAndRain2023, yard, UBO_assay_score, field_ID, date_collected, varroa_load_mites.100.bees, nosema_load_spores.bee )
 
 
 
